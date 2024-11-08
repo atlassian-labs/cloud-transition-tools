@@ -1,0 +1,33 @@
+# Application name
+spring.application.name=cloud-transition-tools
+server.servlet.context-path=/ctt
+
+# Migration scope URLS
+ctt.migration.scope.serverBaseURL = <JIRA_SERVER_BASE_URL>
+ctt.migration.scope.cloudSiteURL = <CLOUD_SITE_URL>
+
+# Data store types.
+# Check the documentation for the available data store types
+ctt.data.store = memory
+
+# Data loader types.
+# Check the documentation for the available data loader types
+ctt.data.loader = jcma
+
+# Data loader parameters specific to the loader type
+# Refer to the loader specific documentation for the parameters
+ctt.data.loader.params.username = <JIRA_USERNAME>
+ctt.data.loader.params.password = <JIRA_PASSWORD>
+
+# Reload mapping data from the source
+# Note: This is applicable only for persistent data stores. Default value is true
+ctt.data.reload = false
+
+# Database access
+# Demonstrated using H2 but can use any database with jdbc driver
+spring.datasource.driver-class-name=org.h2.Driver
+spring.datasource.url=jdbc:h2:file:./data/ctt
+spring.datasource.username=admin
+spring.datasource.password=admin
+spring.sql.init.schema-locations=classpath:mapping.sql
+spring.sql.init.mode=always

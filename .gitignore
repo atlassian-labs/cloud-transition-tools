@@ -7,6 +7,10 @@
 node_modules/
 dist/
 
+
+# Database
+data/
+
 # Compiled Java class files
 *.class
 
@@ -22,6 +26,9 @@ dist/
 # Maven
 target/
 dist/
+
+# Application config file
+application.properties
 
 # JetBrains IDE
 .idea/
