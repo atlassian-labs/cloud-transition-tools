@@ -1,78 +1,56 @@
 package com.atlassian.ctt.data.loader.jcma
 
-import com.atlassian.ctt.data.MigrationMapping
 import com.atlassian.ctt.data.loader.LoaderStatus
 import com.atlassian.ctt.data.loader.LoaderStatusCode
 import com.atlassian.ctt.data.loader.MigrationMappingLoader
 import com.atlassian.ctt.data.loader.MigrationScope
+import com.atlassian.ctt.data.store.MigrationMapping
 import com.atlassian.ctt.data.store.MigrationStore
-import com.atlassian.ctt.service.HTTPCredentials
 import com.atlassian.ctt.service.HTTPRequestService
 import com.atlassian.ctt.service.HTTPResponse
 import kotlinx.coroutines.delay
 import mu.KotlinLogging
 
 const val JCMA_ID_MAPPING_URL = "/rest/migration/latest/report/id-mappings"
+const val JCMA_RELOAD_PARAM = "invalidateCache"
 
 /*
  * JCMAMigrationMappingLoader is a MigrationMappingLoader implementation that loads ID mappings from Jira Cloud Migration Assistant (JCMA).
  * This loads the mapping information from JCMA_ID_MAPPING_URL and stores it in the data store.
  * Refer https://confluence.atlassian.com/migrationkb/api-to-fetch-id-mappings-from-jira-cloud-migration-assistant-1388159626.html for more details.
- *
  */
 class JCMAMigrationMappingLoader(
     scope: MigrationScope,
-    dataStore: MigrationStore,
-    private val params: JCMALoaderParams,
-) : MigrationMappingLoader(scope, dataStore) {
+    private val authHeader: String,
+) : MigrationMappingLoader(scope) {
     private val logger = KotlinLogging.logger(this::class.java.name)
 
-    override suspend fun load(): LoaderStatus {
-        if (!params.reload) {
+    override suspend fun load(
+        dataStore: MigrationStore,
+        reload: Boolean,
+    ): LoaderStatus {
+        if (!reload) {
             logger.info { "Skipping ID mapping as reload is not requested" }
             return LoaderStatus(LoaderStatusCode.LOADED, "Skipping ID mappings load").also {
                 setLoaderStatus(it)
             }
         }
-
-        logger.info { "Loading ID mappings MigrationScope: $scope" }
-        val userName = params.username
-        val password = params.password
-        val pat = params.pat
-
-        var authorization = "basic"
-        if (userName == null || password == null) {
-            if (pat == null) {
-                return LoaderStatus(LoaderStatusCode.FAILED, "No authentication provided").also {
-                    setLoaderStatus(it)
-                }
-            }
-            authorization = "pat"
-        }
-
-        val credentials =
-            when (authorization) {
-                "basic" -> HTTPCredentials.basic(userName!!, password!!)
-                "pat" -> "Bearer $pat"
-                else -> throw IllegalArgumentException("Invalid authorization type: $authorization").also {
-                    setLoaderStatus(LoaderStatus(LoaderStatusCode.FAILED, "Invalid authorization type"))
-                }
-            }
-
-        downloadIdMappingsSuspend(credentials, params.reload)
+        // Download the id mapping data asynchronously
+        // This will keep calling the downloadIDMappings function until the data is loaded
+        downloadIdMappingsSuspend(authHeader, dataStore)
         return getLoaderStatus()
     }
 
+    // TODO: Add error handling
     private suspend fun downloadIdMappingsSuspend(
-        authorization: String,
-        reload: Boolean = false,
+        authHeader: String,
+        dataStore: MigrationStore,
     ) {
-        var invalidateCache = reload
         setLoaderStatus(LoaderStatus(LoaderStatusCode.LOADING, "ID mappings are being loaded"))
+        var reload = true
         do {
             val status =
-                downloadIDMappings(scope.serverBaseURL, scope.cloudSiteURL, authorization, invalidateCache).also {
-                    invalidateCache = false
+                downloadIDMappings(scope.serverBaseURL, scope.cloudSiteURL, authHeader, dataStore, reload).also {
                     setLoaderStatus(it)
                 }
             if (status.code == LoaderStatusCode.FAILED) {
@@ -80,6 +58,7 @@ class JCMAMigrationMappingLoader(
             }
             // Can make this configurable if required
             delay(5000)
+            reload = false
         } while (status.code == LoaderStatusCode.LOADING)
 
         setLoaderStatus(getLoaderStatus())
@@ -88,12 +67,13 @@ class JCMAMigrationMappingLoader(
     private fun downloadIDMappings(
         serverBaseURL: String,
         cloudSiteUrl: String,
-        authorization: String,
-        invalidateCache: Boolean,
+        authHeader: String,
+        dataStore: MigrationStore,
+        reload: Boolean = false,
     ): LoaderStatus {
-        val url = "$serverBaseURL$JCMA_ID_MAPPING_URL?cloudSiteUrl=$cloudSiteUrl&invalidateCache=$invalidateCache"
+        val url = "$serverBaseURL$JCMA_ID_MAPPING_URL?cloudSiteUrl=$cloudSiteUrl&$JCMA_RELOAD_PARAM=$reload"
         logger.info { "Downloading ID mappings from $url" }
-        val headers = mapOf("Authorization" to authorization)
+        val headers = mapOf("Authorization" to authHeader)
 
         try {
             val response: HTTPResponse = HTTPRequestService().get(url, headers)
@@ -113,16 +93,19 @@ class JCMAMigrationMappingLoader(
             assert(response.contentType() == "text/csv")
             val csvStream: java.io.InputStream =
                 response.byteStream() ?: return LoaderStatus(LoaderStatusCode.FAILED, "Failed to download ID mappings")
-            parseCSVStreamToDataStore(csvStream)
+            parseCSVStreamToDataStore(csvStream, dataStore)
         } catch (e: Exception) {
             logger.error(e) { "Failed to download ID mappings" }
-            return LoaderStatus(LoaderStatusCode.FAILED, "Failed to download ID mappings")
+            return LoaderStatus(LoaderStatusCode.FAILED, e.toString() ?: "Failed to download ID mappings")
         }
 
         return LoaderStatus(LoaderStatusCode.LOADED, "ID mappings downloaded")
     }
 
-    private fun parseCSVStreamToDataStore(stream: java.io.InputStream) {
+    private fun parseCSVStreamToDataStore(
+        stream: java.io.InputStream,
+        dataStore: MigrationStore,
+    ) {
         logger.info { "Parsing ID mappings from CSV stream" }
 
         stream.bufferedReader().use {
@@ -138,7 +121,7 @@ class JCMAMigrationMappingLoader(
                 try {
                     val values = line.split(",")
                     val (entityType, serverId, cloudId) = values
-                    val idMapping = MigrationMapping(entityType, serverId.toLong(), cloudId.toLong())
+                    val idMapping = MigrationMapping(scope.serverBaseURL, entityType, serverId.toLong(), cloudId.toLong())
                     dataStore.store(idMapping)
                 } catch (e: Exception) {
                     logger.error(e) { "Failed to parse ID mapping entry: $line" }

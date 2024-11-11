@@ -1,6 +1,6 @@
 package com.atlassian.ctt.data.store.persistent
 
-import com.atlassian.ctt.data.MigrationMapping
+import com.atlassian.ctt.data.store.MigrationMapping
 import com.atlassian.ctt.data.store.MigrationStore
 import org.springframework.stereotype.Component
 
@@ -14,19 +14,21 @@ class PersistentMigrationStore(
     private val repository: MigrationMappingRepository,
 ) : MigrationStore() {
     override fun store(mapping: MigrationMapping) {
-        if (repository.findByEntityTypeAndServerId(mapping.entityType, mapping.serverId) != null) {
+        if (repository.findByServerUrlAndEntityTypeAndServerId(mapping.serverUrl, mapping.entityType, mapping.serverId) != null) {
             return
         }
         repository.save(mapping)
     }
 
     override fun getCloudId(
+        serverURL: String,
         entityType: String,
         serverId: Long,
-    ): Long? = repository.findByEntityTypeAndServerId(entityType, serverId)?.cloudId
+    ): Long? = repository.findByServerUrlAndEntityTypeAndServerId(serverURL, entityType, serverId)?.cloudId
 
     override fun getServerId(
+        serverURL: String,
         entityType: String,
         cloudId: Long,
-    ): Long? = repository.findByEntityTypeAndCloudId(entityType, cloudId)?.serverId
+    ): Long? = repository.findByServerUrlAndEntityTypeAndCloudId(serverURL, entityType, cloudId)?.serverId
 }

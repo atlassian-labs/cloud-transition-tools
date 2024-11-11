@@ -1,5 +1,4 @@
 package com.atlassian.ctt.data.loader
-
 import com.atlassian.ctt.data.store.MigrationStore
 
 /*
@@ -9,7 +8,6 @@ import com.atlassian.ctt.data.store.MigrationStore
  */
 abstract class MigrationMappingLoader(
     val scope: MigrationScope,
-    val dataStore: MigrationStore,
 ) {
     private var loadStatus: LoaderStatus =
         LoaderStatus(LoaderStatusCode.NOT_LOADED, "Data not loaded")
@@ -20,7 +18,12 @@ abstract class MigrationMappingLoader(
         loadStatus = status
     }
 
-    abstract suspend fun load(): LoaderStatus
+    // Load data and populate the data store
+    // every call to load, loads fresh data to the store. It can be incremental or full load
+    abstract suspend fun load(
+        dataStore: MigrationStore,
+        reload: Boolean,
+    ): LoaderStatus
 
     // can implement more methods like refresh, and callbacks on incremental migrations to reload the data
 }

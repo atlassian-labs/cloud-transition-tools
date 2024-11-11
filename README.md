@@ -16,6 +16,8 @@ transition, then the API access will fail. This repository provides a way to fin
 project ID. This also provides integration fixes to solve custom integrations like URL Access, API Access and JQL.
 Custom integration fixes can be built on top of these APIs to resolve the integration issues.
 For example: JQL Filter translation, API translation, URL translation and 3P App usage translation.
+The application is scoped by the Cloud URL. Multiple migration and scopes are supported from different server/dc to a single destination cloud.
+If you have a requirement for multiple destination clouds, then you can create a new instance of the application for each destination cloud.
 
 ### How do I get set up? ###
 

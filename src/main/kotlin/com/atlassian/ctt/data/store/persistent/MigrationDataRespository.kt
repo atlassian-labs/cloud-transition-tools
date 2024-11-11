@@ -1,5 +1,5 @@
 package com.atlassian.ctt.data.store.persistent
-import com.atlassian.ctt.data.MigrationMapping
+import com.atlassian.ctt.data.store.MigrationMapping
 import org.springframework.data.repository.CrudRepository
 
 /*
@@ -9,12 +9,14 @@ import org.springframework.data.repository.CrudRepository
  */
 
 interface MigrationMappingRepository : CrudRepository<MigrationMapping, Long> {
-    fun findByEntityTypeAndServerId(
+    fun findByServerUrlAndEntityTypeAndServerId(
+        serverUrl: String,
         entityType: String,
         serverId: Long,
     ): MigrationMapping?
 
-    fun findByEntityTypeAndCloudId(
+    fun findByServerUrlAndEntityTypeAndCloudId(
+        serverUrl: String,
         entityType: String,
         cloudId: Long,
     ): MigrationMapping?

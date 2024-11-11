@@ -1,108 +1,131 @@
 package com.atlassian.ctt.service
 
-import com.atlassian.ctt.data.MigrationMapping
+import com.atlassian.ctt.data.loader.LoaderStatus
 import com.atlassian.ctt.data.loader.LoaderStatusCode
 import com.atlassian.ctt.data.loader.MigrationMappingLoader
+import com.atlassian.ctt.data.store.MigrationMapping
+import com.atlassian.ctt.data.store.MigrationStore
 import kotlinx.coroutines.*
 import mu.KotlinLogging
-import org.springframework.boot.ApplicationArguments
-import org.springframework.boot.ApplicationRunner
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpServerErrorException
-import java.net.HttpRetryException
-import kotlin.system.exitProcess
 
-/*
- * Service to provide APIs for Cloud Transition Tools
- * This is a spring service and parameters are auto-wired based on values in application.properties
- * Refer config/CTTServiceConfig.kt for more details
+/* Core CTT API Service Layer
+ * This service layer provides APIs for fixing integration problems after migration
+ * It provides APIs to translate server IDs to cloud IDs and more APIs for custom integration fixes
+ * Scoped for a cloud with single migration Store. Technically each of server URL can be loaded with different types of migration loaders.
  */
 @Service
 class CTTService(
-    private val loader: MigrationMappingLoader,
+    @Value("\${ctt.cloudURL}") private val cloudURL: String,
+    @Qualifier("migrationStore") private val dataStore: MigrationStore,
 ) {
     private val logger = KotlinLogging.logger {}
+    private val loaders = mutableMapOf<String, MigrationMappingLoader>()
 
-    suspend fun load() {
-        logger.info { "Initializing CloudTransitionService" }
-        val status = loader.load()
-        if (status.code == LoaderStatusCode.FAILED) {
-            logger.error { "Failed to load Data Mappings. ${status.message}" }
-            exitProcess(1)
+    private fun getLoaderStatus(serverURL: String): LoaderStatus {
+        return loaders[serverURL]?.getLoaderStatus() ?: run {
+            logger.error { "No loader found for server URL $serverURL" }
+            return LoaderStatus(LoaderStatusCode.NOT_LOADED, "Data mapping not loaded for $serverURL. Please load the data mapping")
         }
+    }
+
+    fun getCloudURL(): String = cloudURL
+
+    fun load(
+        loader: MigrationMappingLoader,
+        reload: Boolean = false,
+    ): LoaderStatus {
+        logger.info { "Loading Migration mapping for ${loader.scope}" }
+        if (!reload && loaders.containsKey(loader.scope.serverBaseURL)) {
+            logger.info { "Loader already present for ${loader.scope}. Skipping load. ${getLoaderStatus(loader.scope.serverBaseURL)} " }
+            return getLoaderStatus(loader.scope.serverBaseURL)
+        }
+
+        loaders[loader.scope.serverBaseURL] = loader
+        // TODO: User coroutine scope for scoped handling
+        GlobalScope.launch {
+            val status = loader.load(dataStore, reload)
+            if (status.code == LoaderStatusCode.FAILED) {
+                logger.error { "Failed to load Data Mappings for ${loader.scope}. Error: ${status.message}" }
+            }
+        }
+
+        return LoaderStatus(LoaderStatusCode.LOADING, "Data Mapping is being Loaded. Please try after some time")
     }
 
     // Basic lookup APIs
     fun translateServerIdToCloudId(
+        serverURL: String,
         entityType: String,
         serverId: Long,
     ): MigrationMapping {
-        // TODO: Move common loader status check to an annotation and aspect
-        when (loader.getLoaderStatus().code) {
+        val loadStatus = getLoaderStatus(serverURL)
+        when (loadStatus.code) {
             LoaderStatusCode.LOADING -> {
+                logger.info { "Data Mapping is being Loaded. Please try after some time" }
                 throw HttpServerErrorException(
                     HttpStatus.SERVICE_UNAVAILABLE,
                     "Data Mapping is being Loaded. Please try after some time",
                 )
             }
+            LoaderStatusCode.LOADED -> {
+                val cloudID = dataStore.getCloudId(serverURL, entityType, serverId) ?: 0
+                return MigrationMapping(serverURL, entityType, serverId, cloudID)
+            }
 
-            LoaderStatusCode.FAILED -> {
+            LoaderStatusCode.NOT_LOADED -> {
+                logger.error { "Data Mapping not loaded for $serverURL. Please load the data mapping" }
                 throw HttpServerErrorException(
                     HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Failed to load Data Mappings. Please check logs",
+                    "Data Mapping not loaded for $serverURL. Please load the data mapping",
                 )
             }
-
-            LoaderStatusCode.LOADED -> {
-                return MigrationMapping(entityType, serverId, loader.dataStore.getCloudId(entityType, serverId) ?: 0)
-            }
-
             else -> {
+                logger.error { "Failed to load mapping data. Please check logs" }
                 throw HttpServerErrorException(
                     HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Failed to initialize Loader. Please check logs",
+                    "Failed to load mapping data. Please check logs",
                 )
             }
         }
     }
 
     fun translateCloudIdToServerId(
+        serverURL: String,
         entityType: String,
         cloudId: Long,
     ): MigrationMapping {
-        when (loader.getLoaderStatus().code) {
+        val status = getLoaderStatus(serverURL)
+        when (status.code) {
             LoaderStatusCode.LOADING -> {
-                throw HttpRetryException("Data Mapping is being Loaded. Please try after some time", 503)
+                logger.info { "Data Mapping is being Loaded. Please try after some time" }
+                throw HttpServerErrorException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "Data Mapping is being Loaded. Please try after some time",
+                )
             }
-
-            LoaderStatusCode.FAILED -> {
-                throw HttpRetryException("Failed to load Data Mappings. Please check logs", 503)
-            }
-
             LoaderStatusCode.LOADED -> {
-                return MigrationMapping(entityType, loader.dataStore.getServerId(entityType, cloudId) ?: 0, cloudId)
+                return MigrationMapping(serverURL, entityType, dataStore.getServerId(serverURL, entityType, cloudId) ?: 0, cloudId)
             }
 
+            LoaderStatusCode.NOT_LOADED -> {
+                logger.error { "Data Mapping not loaded for $serverURL. Please load the data mapping" }
+                throw HttpServerErrorException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Data Mapping not loaded for $serverURL. Please load the data mapping",
+                )
+            }
             else -> {
-                throw HttpRetryException("Loader is not initialized", 503)
+                logger.error { "Failed to load mapping data. Please check logs" }
+                throw HttpServerErrorException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to load mapping data. Please check logs",
+                )
             }
-        }
-    }
-}
-
-/*
- * Service runner to initialise the CTTService on application startup
- */
-@Service
-class CTTServiceRunner(
-    private val service: CTTService,
-) : ApplicationRunner {
-    override fun run(args: ApplicationArguments?) {
-        // launch the coroutine with structured concurrency
-        // Note: This is important to avoid memory leaks and to ensure that the coroutine is properly cancelled
-        CoroutineScope(Dispatchers.IO).launch {
-            service.load()
         }
     }
 }
