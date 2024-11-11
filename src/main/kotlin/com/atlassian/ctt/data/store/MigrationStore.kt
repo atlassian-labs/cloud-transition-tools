@@ -5,16 +5,18 @@ package com.atlassian.ctt.data.store
  * Multiple servers can be mapped to a single cloud
  * Multiple destination cloud ids are not supported
  */
-abstract class MigrationStore {
-    abstract fun store(mapping: MigrationMapping)
+interface MigrationStore {
+    fun store(mapping: MigrationMapping)
 
-    abstract fun getCloudId(
+    val size: Int
+
+    fun getCloudId(
         serverURL: String,
         entityType: String,
         serverId: Long,
     ): Long?
 
-    abstract fun getServerId(
+    fun getServerId(
         serverURL: String,
         entityType: String,
         cloudId: Long,

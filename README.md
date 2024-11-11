@@ -63,6 +63,7 @@ Refer to [application.properties](src/main/resources/application.properties.temp
 
 ```
 mvn test
+mvn test -Dtest=ClassName # To set a specific test class
 ```
 
 ### Contribution guidelines ###
@@ -71,6 +72,19 @@ We use Ktlint for linting and formatting. To format the code, run the following 
 ```
 mvn ktlint:format
 ```
+We use Sonarlint for local code quality checks. Install Sonarlint plugin in your IDE and run the code quality checks.
+
+#### SonarQube and Code Coverage
+JaCoCo(Java Code Coverage) is used for code coverage. After running all the unit tests, you can view the report at `target/site/jacoco/index.html`.
+Please make sure to write unit tests for all the new code you write and maintain the code coverage.
+We use SonarQube for code quality checks and code coverage tests. You would ideally need to setup SonarQube locally to run the checks.
+However, internally in Atlassian network, to run SonarQube, run the following command:
+```
+atlas plugin install -n sonar
+atlas sonar scan --defaultBranch develop
+```
+More details at: https://developer.atlassian.com/platform/tool/sonarqube/getting-started/
+
 Follow standard Kotlin coding conventions.
 
 ### Who do I talk to? ###

@@ -5,20 +5,28 @@ import com.atlassian.ctt.data.store.MigrationStore
 import org.springframework.stereotype.Component
 
 /*
- * PersistentMigrationStore is a concrete implementation of MigrationStore that stores the migration mapping data in a persistent store.
+ * PersistentMigrationStore is a concrete implementation of MigrationStore that stores the mapping data persistently.
  * This implementation uses a JPA repository to store the mapping information.
  * Any jdbc compliant database can be used to store the mapping information persistently.
  */
 @Component
 class PersistentMigrationStore(
     private val repository: MigrationMappingRepository,
-) : MigrationStore() {
+) : MigrationStore {
     override fun store(mapping: MigrationMapping) {
-        if (repository.findByServerUrlAndEntityTypeAndServerId(mapping.serverUrl, mapping.entityType, mapping.serverId) != null) {
+        if (repository.findByServerUrlAndEntityTypeAndServerId(
+                mapping.serverUrl,
+                mapping.entityType,
+                mapping.serverId,
+            ) != null
+        ) {
             return
         }
         repository.save(mapping)
     }
+
+    override val size: Int
+        get() = repository.count().toInt()
 
     override fun getCloudId(
         serverURL: String,

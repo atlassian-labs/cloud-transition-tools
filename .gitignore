@@ -7,6 +7,8 @@
 node_modules/
 dist/
 
+# quality
+.scannerwork/
 
 # Database
 data/

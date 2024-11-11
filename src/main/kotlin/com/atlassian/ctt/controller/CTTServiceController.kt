@@ -14,7 +14,10 @@ import org.springframework.web.server.ResponseStatusException
 
 @RestController
 @RequestMapping("/rest/v1")
-@Tag(name = "Cloud Transition Tools Service", description = "Service for translating server IDs to cloud IDs and vice versa")
+@Tag(
+    name = "Cloud Transition Tools Service",
+    description = "Service for translating server IDs to cloud IDs and vice versa",
+)
 class CTTServiceController(
     private val ctt: CTTService,
     private val config: CTTServiceConfig,
@@ -26,19 +29,21 @@ class CTTServiceController(
     @PostMapping("/load")
     @Operation(summary = "Load migration mappings", description = "Load migration mappings for a given server URL")
     fun load(
-        @RequestParam serverURL: String,
+        @RequestParam serverBaseURL: String,
         @RequestHeader("Authorization") authHeader: String,
         @RequestParam("reload") reload: Boolean,
     ) {
-        val loader = config.migrationMappingLoader(serverURL, authHeader)
+        val loader = config.migrationMappingLoader(serverBaseURL, authHeader)
         val status: LoaderStatus = ctt.load(loader, reload)
         when (status.code) {
             LoaderStatusCode.LOADING -> {
                 throw ResponseStatusException(HttpStatus.ACCEPTED, status.message)
             }
+
             LoaderStatusCode.LOADED -> {
                 throw ResponseStatusException(HttpStatus.OK, status.message)
             }
+
             else -> {
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, status.message)
             }
@@ -48,12 +53,12 @@ class CTTServiceController(
     @GetMapping("/server-to-cloud")
     @Operation(summary = "Translate server ID to cloud ID", description = "Translate a server ID to a cloud ID")
     fun translateServerIdToCloudId(
-        @RequestParam serverURL: String,
+        @RequestParam serverBaseURL: String,
         @RequestParam entityType: String,
         @RequestParam serverId: Long,
     ): MigrationMapping =
         try {
-            ctt.translateServerIdToCloudId(serverURL, entityType, serverId)
+            ctt.translateServerIdToCloudId(serverBaseURL, entityType, serverId)
         } catch (e: HttpServerErrorException) {
             throw ResponseStatusException(e.statusCode, e.message, e)
         } catch (e: Exception) {
@@ -63,12 +68,12 @@ class CTTServiceController(
     @GetMapping("/cloud-to-server")
     @Operation(summary = "Translate cloud ID to server ID", description = "Translate a cloud ID to a server ID")
     fun translateCloudToServer(
-        @RequestParam serverURL: String,
+        @RequestParam serverBaseURL: String,
         @RequestParam entityType: String,
         @RequestParam cloudId: Long,
     ): MigrationMapping =
         try {
-            ctt.translateCloudIdToServerId(serverURL, entityType, cloudId)
+            ctt.translateCloudIdToServerId(serverBaseURL, entityType, cloudId)
         } catch (e: HttpServerErrorException) {
             throw ResponseStatusException(e.statusCode, e.message, e)
         } catch (e: Exception) {

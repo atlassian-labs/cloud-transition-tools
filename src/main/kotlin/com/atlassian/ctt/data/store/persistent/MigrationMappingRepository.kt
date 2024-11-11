@@ -1,4 +1,5 @@
 package com.atlassian.ctt.data.store.persistent
+
 import com.atlassian.ctt.data.store.MigrationMapping
 import org.springframework.data.repository.CrudRepository
 

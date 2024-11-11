@@ -10,9 +10,14 @@ typealias HTTPCredentials = okhttp3.Credentials
 data class HTTPResponse(
     private val response: Response,
 ) {
-    fun isOk() = response.code == 200
+    companion object {
+        const val STATUS_OK = 200
+        const val STATUS_ACCEPTED = 202
+    }
 
-    fun isAccepted() = response.code == 202
+    fun isOk() = response.code == STATUS_OK
+
+    fun isAccepted() = response.code == STATUS_ACCEPTED
 
     fun isError() = !isOk() && !isAccepted()
 

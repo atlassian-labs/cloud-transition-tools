@@ -1,8 +1,9 @@
 package com.atlassian.ctt.config
 
-import com.atlassian.ctt.data.loader.*
+import com.atlassian.ctt.data.loader.MigrationMappingLoader
+import com.atlassian.ctt.data.loader.MigrationScope
 import com.atlassian.ctt.data.loader.jcma.JCMAMigrationMappingLoader
-import com.atlassian.ctt.data.store.*
+import com.atlassian.ctt.data.store.MigrationStore
 import com.atlassian.ctt.data.store.memory.MemoryMigrationStore
 import com.atlassian.ctt.data.store.persistent.MigrationMappingRepository
 import com.atlassian.ctt.data.store.persistent.PersistentMigrationStore
@@ -29,11 +30,10 @@ class CTTServiceConfig(
         when (dataStoreType) {
             "memory" -> MemoryMigrationStore()
             "persistent" -> {
-                if (repository == null) {
-                    throw IllegalArgumentException("Repository must be provided for persistent data store type")
-                }
+                requireNotNull(repository) { "Repository must be provided for persistent data store type" }
                 PersistentMigrationStore(repository)
             }
+
             else -> throw IllegalArgumentException("Unsupported data store type: $dataStoreType")
         }
 

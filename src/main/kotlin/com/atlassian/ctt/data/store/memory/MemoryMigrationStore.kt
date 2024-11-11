@@ -14,7 +14,7 @@ data class MappingKey(
  * This is useful for testing and development purposes.
  * Please do not use this to persistently store the mapping information and also to store large amounts of data.
  */
-class MemoryMigrationStore : MigrationStore() {
+class MemoryMigrationStore : MigrationStore {
     private val serverToCloud = mutableMapOf<MappingKey, Long>()
     private val cloudToServer = mutableMapOf<MappingKey, Long>()
 
@@ -22,6 +22,9 @@ class MemoryMigrationStore : MigrationStore() {
         serverToCloud[MappingKey(mapping.serverUrl, mapping.entityType, mapping.serverId)] = mapping.cloudId
         cloudToServer[MappingKey(mapping.serverUrl, mapping.entityType, mapping.cloudId)] = mapping.serverId
     }
+
+    override val size: Int
+        get() = serverToCloud.size
 
     override fun getCloudId(
         serverURL: String,

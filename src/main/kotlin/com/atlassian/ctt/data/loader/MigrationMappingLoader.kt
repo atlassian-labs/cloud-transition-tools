@@ -1,9 +1,10 @@
 package com.atlassian.ctt.data.loader
+
 import com.atlassian.ctt.data.store.MigrationStore
 
 /*
  * MigrationMappingLoader is an abstract class that defines the contract for loading migration mapping data.
- * Data Loaders are scoped to a migration and are responsible for loading mapping information and populating the data store.
+ * Data Loaders are scoped to a migration and are responsible for loading mapping information and populating data store.
  * The data store is decoupled from the loader and can be implemented and scaled independently.
  */
 abstract class MigrationMappingLoader(
