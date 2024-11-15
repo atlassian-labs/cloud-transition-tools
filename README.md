@@ -68,9 +68,9 @@ mvn test -Dtest=ClassName # To set a specific test class
 
 ### Contribution guidelines ###
 #### Linting and Formatting
-We use Ktlint for linting and formatting. To format the code, run the following command:
+We use Detekt for Linting and Ktlint for formatting. To format and lint the code, run the following command:
 ```
-mvn ktlint:format
+mvn detekt:check
 ```
 We use Sonarlint for local code quality checks. Install Sonarlint plugin in your IDE and run the code quality checks.
 

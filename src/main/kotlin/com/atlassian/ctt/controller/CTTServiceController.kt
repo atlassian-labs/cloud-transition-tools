@@ -3,11 +3,12 @@ package com.atlassian.ctt.controller
 import com.atlassian.ctt.config.CTTServiceConfig
 import com.atlassian.ctt.data.loader.LoaderStatus
 import com.atlassian.ctt.data.loader.LoaderStatusCode
-import com.atlassian.ctt.data.store.MigrationMapping
 import com.atlassian.ctt.service.CTTService
+import com.atlassian.ctt.service.URLSanitisationService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.client.HttpServerErrorException
 import org.springframework.web.server.ResponseStatusException
@@ -21,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException
 class CTTServiceController(
     private val ctt: CTTService,
     private val config: CTTServiceConfig,
+    private val urlSanitsationService: URLSanitisationService,
 ) {
     @GetMapping("/health")
     @Operation(summary = "Health check", description = "Check if the service is up and running")
@@ -56,13 +58,14 @@ class CTTServiceController(
         @RequestParam serverBaseURL: String,
         @RequestParam entityType: String,
         @RequestParam serverId: Long,
-    ): MigrationMapping =
+    ): ResponseEntity<out Any> =
         try {
-            ctt.translateServerIdToCloudId(serverBaseURL, entityType, serverId)
+            val mapping = ctt.translateServerIdToCloudId(serverBaseURL, entityType, serverId)
+            ResponseEntity.ok(mapping)
         } catch (e: HttpServerErrorException) {
-            throw ResponseStatusException(e.statusCode, e.message, e)
+            ResponseEntity(e.message, e.statusCode)
         } catch (e: Exception) {
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.message, e)
+            ResponseEntity(e.message, HttpStatus.INTERNAL_SERVER_ERROR)
         }
 
     @GetMapping("/cloud-to-server")
@@ -71,12 +74,27 @@ class CTTServiceController(
         @RequestParam serverBaseURL: String,
         @RequestParam entityType: String,
         @RequestParam cloudId: Long,
-    ): MigrationMapping =
+    ): ResponseEntity<out Any> =
         try {
-            ctt.translateCloudIdToServerId(serverBaseURL, entityType, cloudId)
+            val mapping = ctt.translateCloudIdToServerId(serverBaseURL, entityType, cloudId)
+            ResponseEntity.ok(mapping)
         } catch (e: HttpServerErrorException) {
-            throw ResponseStatusException(e.statusCode, e.message, e)
+            ResponseEntity(e.message, e.statusCode)
         } catch (e: Exception) {
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.message, e)
+            ResponseEntity(e.message, HttpStatus.INTERNAL_SERVER_ERROR)
+        }
+
+    @GetMapping("/url-sanitise")
+    @Operation(summary = "Sanitise URL", description = "Sanitise a URL")
+    fun sanitiseURL(
+        @RequestParam url: String,
+    ): ResponseEntity<out Any> =
+        try {
+            val sanitisedUrl = urlSanitsationService.sanitiseURL(url)
+            ResponseEntity.ok(sanitisedUrl)
+        } catch (e: HttpServerErrorException) {
+            ResponseEntity(e.message, e.statusCode)
+        } catch (e: Exception) {
+            ResponseEntity(e.message, HttpStatus.INTERNAL_SERVER_ERROR)
         }
 }

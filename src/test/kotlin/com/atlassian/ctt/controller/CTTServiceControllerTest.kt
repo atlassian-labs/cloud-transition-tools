@@ -8,6 +8,7 @@ import com.atlassian.ctt.data.loader.MigrationScope
 import com.atlassian.ctt.data.store.MigrationMapping
 import com.atlassian.ctt.data.store.persistent.MigrationMappingRepository
 import com.atlassian.ctt.service.CTTService
+import com.atlassian.ctt.service.URLSanitisationService
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.coEvery
 import io.mockk.every
@@ -35,6 +36,9 @@ class CTTServiceControllerTest {
 
     @MockkBean
     private lateinit var migrationMappingRepository: MigrationMappingRepository
+
+    @MockkBean
+    private lateinit var urlSanitisationService: URLSanitisationService
 
     private val serverURL = "serverURL"
     private var cloudUrl = "cloudURL"
@@ -203,6 +207,47 @@ class CTTServiceControllerTest {
                     .param("serverBaseURL", serverURL)
                     .param("entityType", entityType)
                     .param("cloudId", cloudId.toString()),
+            ).andExpect(status().isInternalServerError)
+    }
+
+    @Test
+    fun `sanitise URL success scenario`() {
+        val url = "https://serverURL/unsupported/api/2/issue/17499"
+        val sanitisedUrl = "https://cloudURL/unsupported/api/2/issue/10900"
+        every { urlSanitisationService.sanitiseURL(url) } returns sanitisedUrl
+
+        mockMvc
+            .perform(
+                get("/rest/v1/url-sanitise")
+                    .param("url", url),
+            ).andExpect(status().isOk)
+            .andExpect(content().string(sanitisedUrl))
+    }
+
+    @Test
+    fun `sanitise URL failure scenario`() {
+        val url = "https://serverURL/unsupported/api/2/issue/17499"
+        every { urlSanitisationService.sanitiseURL(url) } throws
+            HttpServerErrorException(
+                HttpStatus.ACCEPTED,
+            )
+
+        mockMvc
+            .perform(
+                get("/rest/v1/url-sanitise")
+                    .param("url", url),
+            ).andExpect(status().isAccepted)
+    }
+
+    @Test
+    fun `sanitise URL failure scenario with exception`() {
+        val url = "https://serverURL/unsupported/api/2/issue/17499"
+        every { urlSanitisationService.sanitiseURL(url) } throws Exception()
+
+        mockMvc
+            .perform(
+                get("/rest/v1/url-sanitise")
+                    .param("url", url),
             ).andExpect(status().isInternalServerError)
     }
 }

@@ -194,6 +194,19 @@
 					<sourceRoots>${project.basedir}/src</sourceRoots>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>com.github.ozsie</groupId>
+				<artifactId>detekt-maven-plugin</artifactId>
+				<version>1.23.7</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
 		</plugins>
 	</build>
 

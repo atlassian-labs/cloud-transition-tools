@@ -7,6 +7,8 @@ import com.atlassian.ctt.data.store.MigrationStore
 import com.atlassian.ctt.data.store.memory.MemoryMigrationStore
 import com.atlassian.ctt.data.store.persistent.MigrationMappingRepository
 import com.atlassian.ctt.data.store.persistent.PersistentMigrationStore
+import com.atlassian.ctt.integrations.url.JiraV2URLParser
+import com.atlassian.ctt.integrations.url.URLParser
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -46,5 +48,11 @@ class CTTServiceConfig(
             "jcma" -> JCMAMigrationMappingLoader(migrationScope, authHeader)
             else -> throw IllegalArgumentException("Unsupported data loader type: $dataLoaderType")
         }
+    }
+
+    @Bean
+    fun urlParser(): URLParser {
+        // Only Jira V2 URL/ API is supported
+        return JiraV2URLParser()
     }
 }

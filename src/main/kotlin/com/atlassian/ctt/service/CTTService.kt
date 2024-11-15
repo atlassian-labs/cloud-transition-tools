@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpServerErrorException
+import kotlin.jvm.Throws
 
 /* Core CTT API Service Layer
  * This service layer provides APIs for fixing integration problems after migration
@@ -108,6 +109,7 @@ class CTTService(
     }
 
     // Basic lookup APIs
+    @Throws(HttpServerErrorException::class)
     fun translateServerIdToCloudId(
         serverURL: String,
         entityType: String,
@@ -119,6 +121,7 @@ class CTTService(
         return MigrationMapping(serverURL, entityType, serverId, cloudID)
     }
 
+    @Throws(HttpServerErrorException::class)
     fun translateCloudIdToServerId(
         serverURL: String,
         entityType: String,

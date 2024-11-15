@@ -1,5 +1,6 @@
 package com.atlassian.ctt.service
 
+import com.atlassian.ctt.data.ARI
 import com.atlassian.ctt.data.loader.LoaderStatus
 import com.atlassian.ctt.data.loader.LoaderStatusCode
 import com.atlassian.ctt.data.loader.MigrationMappingLoader
@@ -18,7 +19,7 @@ import org.springframework.web.client.HttpServerErrorException
 class CTTServiceTest {
     private val serverURL = "serverURL"
     private var cloudUrl = "cloudURL"
-    private val entityType = "jira:issue"
+    private val entityType = ARI.JIRA_ISSUE.toString()
     private val serverId = 17499L
     private val cloudId = 10542L
 

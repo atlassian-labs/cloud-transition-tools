@@ -97,7 +97,7 @@ class JCMAMigrationMappingLoader(
             parseCSVStreamToDataStore(csvStream, dataStore)
         } catch (e: Exception) {
             logger.error(e) { "Failed to download ID mappings" }
-            return LoaderStatus(LoaderStatusCode.FAILED, e.toString() ?: "Failed to download ID mappings")
+            return LoaderStatus(LoaderStatusCode.FAILED, e.toString())
         }
 
         return getLoaderStatus()
