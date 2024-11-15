@@ -222,7 +222,7 @@ class CTTServiceTest {
         }
 
     @Test
-    fun `destroy service`(): Unit =
+    fun `destroy service and ensure no crash or failure`(): Unit =
         runBlocking {
             cttService.destroy()
         }

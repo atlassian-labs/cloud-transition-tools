@@ -44,6 +44,8 @@ class MemoryMigrationStoreTest {
 
             val mapping = MigrationMapping("serverURL", "jira:issue", 17499, 10542)
             assertEquals(10542, store.getCloudId(mapping.serverUrl, mapping.entityType, mapping.serverId))
+            assertEquals(null, store.getCloudId(mapping.serverUrl, "jira:portalPage", 17499))
+            assertEquals(null, store.getCloudId("server.url.2", "jira:issue", 17499))
             assertEquals(17499, store.getServerId(mapping.serverUrl, mapping.entityType, mapping.cloudId))
         }
 
@@ -61,5 +63,34 @@ class MemoryMigrationStoreTest {
             val mapping = MigrationMapping("serverURL", "jira:issue", 1, 2)
             assertEquals(null, store.getCloudId(mapping.serverUrl, mapping.entityType, mapping.serverId))
             assertEquals(null, store.getServerId(mapping.serverUrl, mapping.entityType, mapping.cloudId))
+        }
+
+    @Test
+    fun `test multiple server URL with valid data`() =
+        runBlocking {
+            val mappingData = mappingDataCSV.split("\n").drop(1)
+            for (line in mappingData) {
+                val (entityType, serverId, cloudId) = line.split(",")
+                store.store(MigrationMapping("serverURL", entityType, serverId.toLong(), cloudId.toLong()))
+            }
+
+            val server2Data =
+                """
+                jira:issue,17499,20542
+                jira:issue,17589,20452
+                jira:comment,16412,21782,
+                """.trimIndent().run {
+                    split("\n").drop(1)
+                }
+            for (line in server2Data) {
+                val (entityType, serverId, cloudId) = line.split(",")
+                store.store(MigrationMapping("serverURL", entityType, serverId.toLong(), cloudId.toLong()))
+            }
+
+            assertEquals(mappingCount, store.size)
+
+            val mapping = MigrationMapping("serverURL", "jira:issue", 17499, 10542)
+            assertEquals(10542, store.getCloudId(mapping.serverUrl, mapping.entityType, mapping.serverId))
+            assertEquals(17499, store.getServerId(mapping.serverUrl, mapping.entityType, mapping.cloudId))
         }
 }

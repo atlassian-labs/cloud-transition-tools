@@ -67,12 +67,15 @@ mvn test -Dtest=ClassName # To set a specific test class
 ```
 
 ### Contribution guidelines ###
+Make sure you follow the below guidelines before contributing to the project.
+
 #### Linting and Formatting
 We use Detekt for Linting and Ktlint for formatting. To format and lint the code, run the following command:
 ```
 mvn detekt:check
 ```
 We use Sonarlint for local code quality checks. Install Sonarlint plugin in your IDE and run the code quality checks.
+Make sure all formatting and linting issues are resolved before raising a PR.
 
 #### SonarQube and Code Coverage
 JaCoCo(Java Code Coverage) is used for code coverage. After running all the unit tests, you can view the report at `target/site/jacoco/index.html`.
@@ -84,6 +87,7 @@ atlas plugin install -n sonar
 atlas sonar scan --defaultBranch develop
 ```
 More details at: https://developer.atlassian.com/platform/tool/sonarqube/getting-started/
+Make sure the code quality checks and code coverage checks pass before raising a PR.
 
 Follow standard Kotlin coding conventions.
 
