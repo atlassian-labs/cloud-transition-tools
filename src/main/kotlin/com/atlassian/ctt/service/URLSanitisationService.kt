@@ -15,14 +15,14 @@ class URLSanitisationService(
 ) {
     private val logger = KotlinLogging.logger(this::class.java.name)
 
-    fun isIntegerID(value: String) = value.matches(Regex("^[0-9]+$"))
+    private fun isIntegerID(value: String) = value.matches(Regex("^[0-9]+$"))
 
-    fun isJQLQueryField(key: String): Boolean {
+    private  fun isJQLQueryField(key: String): Boolean {
         val jqls = listOf("jql", "query", "currentJQL")
         return jqls.contains(key)
     }
 
-    fun sanitisePathParams(
+    private fun sanitisePathParams(
         serverBaseUrl: String,
         pathParams: List<String>,
     ): List<String> {
@@ -71,7 +71,7 @@ class URLSanitisationService(
         return sanitisedPathParams
     }
 
-    fun sanitiseQueryParams(
+    private fun sanitiseQueryParams(
         serverBaseUrl: String,
         queryParams: List<Pair<String, String>>,
     ): List<Pair<String, String>> {
@@ -119,11 +119,13 @@ class URLSanitisationService(
             logger.error(e) { "Failed to parse URL: $serverURL" }
             throw e
         }
+        return sanitiseURLParts(url).toString()
+    }
 
+    fun sanitiseURLParts(url: URLParts): URLParts {
         val cloudPathParams = sanitisePathParams(url.baseURL, url.pathParams)
         val cloudQueryParams = sanitiseQueryParams(url.baseURL, url.queryParams)
 
-        val cloudURL = URLParts(ctt.getCloudURL(), url.apiPath, cloudPathParams, cloudQueryParams)
-        return cloudURL.toString()
+        return URLParts(ctt.getCloudURL(), url.apiPath, cloudPathParams, cloudQueryParams)
     }
 }

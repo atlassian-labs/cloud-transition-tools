@@ -41,7 +41,7 @@ class JiraV2URLParser : URLParser {
             throw URISyntaxException("Invalid URL", "URL Sanitisation is only supported for REST APIs")
         }
 
-        if (apiName !in apiVersionMap || apiVersion.toDouble().toInt() != apiVersionMap[apiName]) {
+        if (apiName !in apiVersionMap || apiVersion.toDoubleOrNull()?.toInt() != apiVersionMap[apiName]) {
             throw URISyntaxException("Invalid URL", "URL Sanitisation is not supported for the given API version")
         }
         val apiPath = pathSegments.take(3).joinToString("/")

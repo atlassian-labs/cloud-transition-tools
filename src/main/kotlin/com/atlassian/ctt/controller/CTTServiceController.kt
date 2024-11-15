@@ -3,6 +3,7 @@ package com.atlassian.ctt.controller
 import com.atlassian.ctt.config.CTTServiceConfig
 import com.atlassian.ctt.data.loader.LoaderStatus
 import com.atlassian.ctt.data.loader.LoaderStatusCode
+import com.atlassian.ctt.service.APISanitisationService
 import com.atlassian.ctt.service.CTTService
 import com.atlassian.ctt.service.URLSanitisationService
 import io.swagger.v3.oas.annotations.Operation
@@ -23,6 +24,7 @@ class CTTServiceController(
     private val ctt: CTTService,
     private val config: CTTServiceConfig,
     private val urlSanitsationService: URLSanitisationService,
+    private val apiSanitisationService: APISanitisationService,
 ) {
     @GetMapping("/health")
     @Operation(summary = "Health check", description = "Check if the service is up and running")
@@ -92,6 +94,21 @@ class CTTServiceController(
         try {
             val sanitisedUrl = urlSanitsationService.sanitiseURL(url)
             ResponseEntity.ok(sanitisedUrl)
+        } catch (e: HttpServerErrorException) {
+            ResponseEntity(e.message, e.statusCode)
+        } catch (e: Exception) {
+            ResponseEntity(e.message, HttpStatus.INTERNAL_SERVER_ERROR)
+        }
+
+    @GetMapping("/api-sanitise")
+    @Operation(summary = "Sanitise API", description = "Sanitise an API")
+    fun sanitiseAPI(
+        @RequestParam url: String,
+        @RequestBody body: String,
+    ): ResponseEntity<out Any> =
+        try {
+            val sanitisedAPI = apiSanitisationService.sanitiseAPI(url, body)
+            ResponseEntity.ok(sanitisedAPI)
         } catch (e: HttpServerErrorException) {
             ResponseEntity(e.message, e.statusCode)
         } catch (e: Exception) {

@@ -7,6 +7,8 @@ import com.atlassian.ctt.data.store.MigrationStore
 import com.atlassian.ctt.data.store.memory.MemoryMigrationStore
 import com.atlassian.ctt.data.store.persistent.MigrationMappingRepository
 import com.atlassian.ctt.data.store.persistent.PersistentMigrationStore
+import com.atlassian.ctt.integrations.api.APIParser
+import com.atlassian.ctt.integrations.api.JiraV2ApiParser
 import com.atlassian.ctt.integrations.url.JiraV2URLParser
 import com.atlassian.ctt.integrations.url.URLParser
 import org.springframework.beans.factory.annotation.Value
@@ -54,5 +56,11 @@ class CTTServiceConfig(
     fun urlParser(): URLParser {
         // Only Jira V2 URL/ API is supported
         return JiraV2URLParser()
+    }
+
+    @Bean
+    fun apiParser(): APIParser {
+        // Only Jira V2 URL/ API is supported
+        return JiraV2ApiParser()
     }
 }

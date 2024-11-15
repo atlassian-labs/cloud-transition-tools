@@ -69,6 +69,15 @@ class JiraV2URLParserTest {
         }
 
     @Test
+    fun `test url parser with no invalid path version`(): Unit =
+        runBlocking {
+            val url = "http://localhost:8080/some/reset/api/v2"
+            assertThrows(URISyntaxException::class.java) {
+                urlParser.parseURL(url)
+            }
+        }
+
+    @Test
     fun `test url parser with valid rest api path`(): Unit =
         runBlocking {
             val url = "http://localhost:8080/rest/api/2"

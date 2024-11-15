@@ -63,7 +63,7 @@ Refer to [application.properties](src/main/resources/application.properties.temp
 
 ```
 mvn test
-mvn test -Dtest=ClassName # To set a specific test class
+mvn test -Dtest=ClassName1,ClassName2 # To set a specific test classes
 ```
 
 ### Contribution guidelines ###
@@ -73,6 +73,7 @@ Make sure you follow the below guidelines before contributing to the project.
 We use Detekt for Linting and Ktlint for formatting. To format and lint the code, run the following command:
 ```
 mvn detekt:check
+id # To format the code
 ```
 We use Sonarlint for local code quality checks. Install Sonarlint plugin in your IDE and run the code quality checks.
 Make sure all formatting and linting issues are resolved before raising a PR.

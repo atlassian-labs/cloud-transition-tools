@@ -7,6 +7,7 @@ import com.atlassian.ctt.data.loader.MigrationMappingLoader
 import com.atlassian.ctt.data.loader.MigrationScope
 import com.atlassian.ctt.data.store.MigrationMapping
 import com.atlassian.ctt.data.store.persistent.MigrationMappingRepository
+import com.atlassian.ctt.service.APISanitisationService
 import com.atlassian.ctt.service.CTTService
 import com.atlassian.ctt.service.URLSanitisationService
 import com.ninjasquad.springmockk.MockkBean
@@ -39,6 +40,9 @@ class CTTServiceControllerTest {
 
     @MockkBean
     private lateinit var urlSanitisationService: URLSanitisationService
+
+    @MockkBean
+    private lateinit var apiSanitisationService: APISanitisationService
 
     private val serverURL = "serverURL"
     private var cloudUrl = "cloudURL"
@@ -248,6 +252,62 @@ class CTTServiceControllerTest {
             .perform(
                 get("/rest/v1/url-sanitise")
                     .param("url", url),
+            ).andExpect(status().isInternalServerError)
+    }
+
+    @Test
+    fun `sanitise API success scenario`() {
+        val url = "https://serverURL/unsupported/api/2/issue/17499"
+        val body = """
+            {
+                "issues" : [10000],
+                "boardId" : 10000
+            }
+        """
+        every { apiSanitisationService.sanitiseAPI(url, body) } returns mapOf("url" to url, "body" to body)
+
+        mockMvc
+            .perform(
+                get("/rest/v1/api-sanitise")
+                    .param("url", url)
+                    .content(body)
+                    .contentType("application/json"),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.url").value(url))
+            .andExpect(jsonPath("$.body").value(body))
+    }
+
+    @Test
+    fun `sanitise API failure scenario`() {
+        val url = "https://serverURL/unsupported/api/2/issue/17499"
+        val body = "{}"
+
+        every { apiSanitisationService.sanitiseAPI(url, body) } throws
+            HttpServerErrorException(
+                HttpStatus.ACCEPTED,
+            )
+
+        mockMvc
+            .perform(
+                get("/rest/v1/api-sanitise")
+                    .param("url", url)
+                    .content(body)
+                    .contentType("application/json"),
+            ).andExpect(status().isAccepted)
+    }
+
+    @Test
+    fun `sanitise API failure scenario with exception`() {
+        val url = "https://serverURL/unsupported/api/2/issue/17499"
+        val body = "{}"
+        every { apiSanitisationService.sanitiseAPI(url, body) } throws Exception()
+
+        mockMvc
+            .perform(
+                get("/rest/v1/api-sanitise")
+                    .param("url", url)
+                    .content(body)
+                    .contentType("application/json"),
             ).andExpect(status().isInternalServerError)
     }
 }
