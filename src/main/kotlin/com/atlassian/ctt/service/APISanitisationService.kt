@@ -4,6 +4,7 @@ import com.atlassian.ctt.integrations.api.APIParser
 import com.atlassian.ctt.integrations.api.APIParts
 import com.atlassian.ctt.integrations.api.apiBodyParams
 import com.atlassian.ctt.integrations.url.URLParts
+import com.fasterxml.jackson.core.JsonParseException
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
 
@@ -22,7 +23,7 @@ class APISanitisationService(
         val apiParts: APIParts
         try {
             apiParts = apiParser.parseAPI(url, body)
-        } catch (e: Exception) {
+        } catch (e: JsonParseException) {
             logger.error(e) { "Error parsing API: $url $body" }
             throw e
         }
@@ -51,13 +52,7 @@ class APISanitisationService(
                 return id
             }
 
-        val cloudID: Long
-        try {
-            cloudID = ctt.translateServerIdToCloudId(serverBaseUrl, ari, id.toLong()).cloudId
-        } catch (e: Exception) {
-            logger.error(e) { "Failed to translate server ID $id for entity $entity" }
-            throw e
-        }
+        val cloudID = ctt.translateServerIdToCloudId(serverBaseUrl, ari, id.toLong()).cloudId
         return cloudID.takeIf { it != 0L } ?: run {
             logger.warn { "Failed to translate server ID $id for entity $entity as there is no mapping." }
             id
@@ -74,7 +69,8 @@ class APISanitisationService(
                     val customFieldKey = apiParser.keyAsCustomField(key)
                     if (customFieldKey != null) {
                         val (customField, customFieldId) = customFieldKey
-                        val cloudCustomField = customField + translateEntity(serverBaseUrl, customField, customFieldId.toLong()).toString()
+                        val cloudCustomField =
+                            customField + translateEntity(serverBaseUrl, customField, customFieldId.toLong()).toString()
                         return@map cloudCustomField to value
                     }
                     when (value) {

@@ -22,21 +22,21 @@ class CTTServiceMultipleMigrationTest {
     private val entityMaps =
         mapOf(
             serverURLs[0] to
-                    mapOf(
-                        Pair("jira:issue", 10000L) to 10001L,
-                        Pair("jira/classic:project", 10001L) to 10002L,
-                    ),
+                mapOf(
+                    Pair("jira:issue", 10000L) to 10001L,
+                    Pair("jira/classic:project", 10001L) to 10002L,
+                ),
             serverURLs[1] to
-                    mapOf(
-                        Pair("jira:priority", 10000L) to 20001L,
-                        Pair("jira:priority", 10002L) to 20003L,
-                    ),
+                mapOf(
+                    Pair("jira:priority", 10000L) to 20001L,
+                    Pair("jira:priority", 10002L) to 20003L,
+                ),
             serverURLs[2] to
-                    mapOf(
-                        Pair("jira:issue", 10000L) to 30001L,
-                        Pair("jira:issue", 10003L) to 30004L,
-                        Pair("jira/classic/software:sprint", 10000L) to 130006L,
-                    ),
+                mapOf(
+                    Pair("jira:issue", 10000L) to 30001L,
+                    Pair("jira:issue", 10003L) to 30004L,
+                    Pair("jira/classic/software:sprint", 10000L) to 130006L,
+                ),
         )
 
     private var dataStore: MigrationStore = mockk(relaxed = true)

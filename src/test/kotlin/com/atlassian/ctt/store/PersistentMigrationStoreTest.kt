@@ -15,13 +15,19 @@ class MigrationMappingRepositoryMock : MigrationMappingRepository {
         serverUrl: String,
         entityType: String,
         serverId: Long,
-    ): MigrationMapping? = data.find { it.serverUrl == serverUrl && it.entityType == entityType && it.serverId == serverId }
+    ): MigrationMapping? =
+        data.find {
+            it.serverUrl == serverUrl &&
+                it.entityType == entityType &&
+                it.serverId == serverId
+        }
 
     override fun findByServerUrlAndEntityTypeAndCloudId(
         serverUrl: String,
         entityType: String,
         cloudId: Long,
-    ): MigrationMapping? = data.find { it.serverUrl == serverUrl && it.entityType == entityType && it.cloudId == cloudId }
+    ): MigrationMapping? =
+        data.find { it.serverUrl == serverUrl && it.entityType == entityType && it.cloudId == cloudId }
 
     override fun <S : MigrationMapping?> save(entity: S & Any): S & Any {
         data.add(entity)
@@ -118,8 +124,22 @@ class PersistentMigrationStoreTest {
             }
             assertEquals(mappingCount, store.size)
             val mappingAfterReload = MigrationMapping("serverURL", "jira:issue", 17499, 10542)
-            assertEquals(10542, store.getCloudId(mappingAfterReload.serverUrl, mappingAfterReload.entityType, mappingAfterReload.serverId))
-            assertEquals(17499, store.getServerId(mappingAfterReload.serverUrl, mappingAfterReload.entityType, mappingAfterReload.cloudId))
+            assertEquals(
+                10542,
+                store.getCloudId(
+                    mappingAfterReload.serverUrl,
+                    mappingAfterReload.entityType,
+                    mappingAfterReload.serverId,
+                ),
+            )
+            assertEquals(
+                17499,
+                store.getServerId(
+                    mappingAfterReload.serverUrl,
+                    mappingAfterReload.entityType,
+                    mappingAfterReload.cloudId,
+                ),
+            )
         }
 
     @Test

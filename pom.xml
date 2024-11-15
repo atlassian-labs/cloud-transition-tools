@@ -200,9 +200,11 @@
 				<version>1.23.7</version>
 				<executions>
 					<execution>
-						<goals>
-							<goal>check</goal>
-						</goals>
+						<phase>verify</phase>
+						<goals><goal>check</goal></goals>
+						<configuration>
+							<config>detekt.yml</config>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>

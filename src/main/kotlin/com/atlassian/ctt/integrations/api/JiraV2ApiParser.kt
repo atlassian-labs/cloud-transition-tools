@@ -21,8 +21,6 @@ class JiraV2ApiParser(
             requestBody = jacksonObjectMapper().readValue(if (bodyJson.isNullOrEmpty()) "{}" else bodyJson)
         } catch (e: JsonParseException) {
             throw JsonParseException("Failed to parse API Request Body.: ${e.message}")
-        } catch (e: Exception) {
-            throw e
         }
 
         val flattenedBody = flattenJson(requestBody)

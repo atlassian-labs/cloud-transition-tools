@@ -1,8 +1,12 @@
 package com.atlassian.ctt.service
 
-import com.atlassian.ctt.integrations.url.*
+import com.atlassian.ctt.integrations.url.JiraV2URLParamsARIMap
+import com.atlassian.ctt.integrations.url.JiraV2URLQueryParamsARIMap
+import com.atlassian.ctt.integrations.url.URLParser
+import com.atlassian.ctt.integrations.url.URLParts
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
+import java.net.URISyntaxException
 
 /*
 URL Sanitisation Service.
@@ -17,7 +21,7 @@ class URLSanitisationService(
 
     private fun isIntegerID(value: String) = value.matches(Regex("^[0-9]+$"))
 
-    private  fun isJQLQueryField(key: String): Boolean {
+    private fun isJQLQueryField(key: String): Boolean {
         val jqls = listOf("jql", "query", "currentJQL")
         return jqls.contains(key)
     }
@@ -39,7 +43,8 @@ class URLSanitisationService(
                 }
 
                 // Note: Assuming immediate preceding path param is the entity, this is true for supported entities
-                // So the cases where multiple path elements form an entity -> Example: /rest/api/2/issue/createmeta/{issueId} are not supported.
+                // cases where multiple path elements form an entity are not supported
+                // Example: /rest/api/2/issue/createmeta/{issueId} is an invalid URL in our case.
                 // For now there is no requirement for this as we do not support such cases.
                 val entity =
                     pathParams.getOrNull(index - 1) ?: run {
@@ -54,14 +59,7 @@ class URLSanitisationService(
                         return@mapIndexed value
                     }
 
-                val cloudID: Long
-                try {
-                    cloudID = ctt.translateServerIdToCloudId(serverBaseUrl, ari, value.toLong()).cloudId
-                } catch (e: Exception) {
-                    logger.error(e) { "Failed to translate server ID $value for entity $entity" }
-                    throw e
-                }
-
+                val cloudID = ctt.translateServerIdToCloudId(serverBaseUrl, ari, value.toLong()).cloudId
                 cloudID.takeIf { it != 0L }?.toString() ?: run {
                     logger.warn { "Failed to translate server ID $value for entity $entity as there is no mapping." }
                     value
@@ -91,17 +89,12 @@ class URLSanitisationService(
                         return@map key to value
                     }
 
-                val cloudID: Long
-                try {
-                    cloudID = ctt.translateServerIdToCloudId(serverBaseUrl, ari, value.toLong()).cloudId
-                } catch (e: Exception) {
-                    logger.error(e) { "Failed to translate server ID $value for query param $key" }
-                    throw e
-                }
-
+                val cloudID = ctt.translateServerIdToCloudId(serverBaseUrl, ari, value.toLong()).cloudId
                 val cloudValue =
                     cloudID.takeIf { it != 0L }?.toString() ?: run {
-                        logger.warn { "Failed to translate server ID $value for query param $key as there is no mapping." }
+                        logger.warn {
+                            "Failed to translate server ID $value for query param $key as there is no mapping."
+                        }
                         return@map key to value
                     }
 
@@ -115,7 +108,7 @@ class URLSanitisationService(
         val url: URLParts
         try {
             url = urlParser.parseURL(serverURL)
-        } catch (e: Exception) {
+        } catch (e: URISyntaxException) {
             logger.error(e) { "Failed to parse URL: $serverURL" }
             throw e
         }

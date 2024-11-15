@@ -11,7 +11,12 @@ data class URLParts(
     override fun toString(): String =
         baseURL + "/" + apiPath +
             pathParams.takeIf { it.isNotEmpty() }?.joinToString(separator = "/", prefix = "/") { it }.orEmpty() +
-            queryParams.takeIf { it.isNotEmpty() }?.joinToString(separator = "&", prefix = "?") { it.first + "=" + it.second }.orEmpty()
+            queryParams
+                .takeIf { it.isNotEmpty() }
+                ?.joinToString(separator = "&", prefix = "?") {
+                    it.first + "=" +
+                        it.second
+                }.orEmpty()
 }
 
 /* URL Parser interface. Parses the URL into following parts

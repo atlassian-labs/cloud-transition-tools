@@ -18,6 +18,7 @@ import org.springframework.data.jdbc.repository.config.EnableJdbcRepositories
 @EnableJdbcRepositories
 class CTTApplication
 
+@Suppress("SpreadOperator")
 fun main(args: Array<String>) {
     runApplication<CTTApplication>(*args)
 }

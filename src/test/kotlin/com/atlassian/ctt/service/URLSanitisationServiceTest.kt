@@ -129,7 +129,8 @@ class URLSanitisationServiceTest {
     fun `test sanitise with no mapping`(): Unit =
         runBlocking {
             val url = "$serverURL/rest/api/2/issue/17499/role/developer"
-            every { cttService.translateServerIdToCloudId(any(), any(), any()) } returns MigrationMapping(serverURL, "jira:issue", 17499, 0)
+            every { cttService.translateServerIdToCloudId(any(), any(), any()) } returns
+                MigrationMapping(serverURL, "jira:issue", 17499, 0)
             val sanitisedURL = urlService.sanitiseURL(url)
             assertEquals(sanitisedURL, url.replace(serverURL, cloudURL))
         }

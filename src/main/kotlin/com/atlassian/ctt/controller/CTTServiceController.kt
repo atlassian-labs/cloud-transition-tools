@@ -10,7 +10,13 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.client.HttpServerErrorException
 import org.springframework.web.server.ResponseStatusException
 
@@ -28,7 +34,7 @@ class CTTServiceController(
 ) {
     @GetMapping("/health")
     @Operation(summary = "Health check", description = "Check if the service is up and running")
-    fun health(): String = "OK"
+    fun health(): ResponseEntity<String> = ResponseEntity.ok("OK")
 
     @PostMapping("/load")
     @Operation(summary = "Load migration mappings", description = "Load migration mappings for a given server URL")
@@ -66,8 +72,6 @@ class CTTServiceController(
             ResponseEntity.ok(mapping)
         } catch (e: HttpServerErrorException) {
             ResponseEntity(e.message, e.statusCode)
-        } catch (e: Exception) {
-            ResponseEntity(e.message, HttpStatus.INTERNAL_SERVER_ERROR)
         }
 
     @GetMapping("/cloud-to-server")
@@ -82,8 +86,6 @@ class CTTServiceController(
             ResponseEntity.ok(mapping)
         } catch (e: HttpServerErrorException) {
             ResponseEntity(e.message, e.statusCode)
-        } catch (e: Exception) {
-            ResponseEntity(e.message, HttpStatus.INTERNAL_SERVER_ERROR)
         }
 
     @GetMapping("/url-sanitise")
@@ -96,8 +98,6 @@ class CTTServiceController(
             ResponseEntity.ok(sanitisedUrl)
         } catch (e: HttpServerErrorException) {
             ResponseEntity(e.message, e.statusCode)
-        } catch (e: Exception) {
-            ResponseEntity(e.message, HttpStatus.INTERNAL_SERVER_ERROR)
         }
 
     @GetMapping("/api-sanitise")
@@ -111,7 +111,5 @@ class CTTServiceController(
             ResponseEntity.ok(sanitisedAPI)
         } catch (e: HttpServerErrorException) {
             ResponseEntity(e.message, e.statusCode)
-        } catch (e: Exception) {
-            ResponseEntity(e.message, HttpStatus.INTERNAL_SERVER_ERROR)
         }
 }

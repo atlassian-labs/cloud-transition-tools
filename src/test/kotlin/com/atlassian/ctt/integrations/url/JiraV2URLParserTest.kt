@@ -1,7 +1,5 @@
 package com.atlassian.ctt.integrations.url
 
-import com.atlassian.ctt.service.CTTService
-import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -9,7 +7,6 @@ import org.junit.jupiter.api.Test
 import java.net.URISyntaxException
 
 class JiraV2URLParserTest {
-    private val cttService = mockk<CTTService>(relaxed = true)
     private val urlParser = JiraV2URLParser()
 
     @Test
@@ -23,12 +20,16 @@ class JiraV2URLParserTest {
                     "expand" to "projects.issuetypes.fields",
                 ),
             )
-        assertEquals("http://localhost:8080/rest/api/2/issue/ISSUE-1/createmeta?expand=projects.issuetypes.fields", urlParts.toString())
+        assertEquals(
+            "http://localhost:8080/rest/api/2/issue/ISSUE-1/createmeta?expand=projects.issuetypes.fields",
+            urlParts.toString(),
+        )
 
         val urlParts2 = URLParts("http://localhost:8080", "rest/api/2", emptyList(), emptyList())
         assertEquals("http://localhost:8080/rest/api/2", urlParts2.toString())
 
-        val urlParts3 = URLParts("http://localhost:8080", "rest/api/2", listOf("issue", "ISSUE-1", "createmeta"), emptyList())
+        val urlParts3 =
+            URLParts("http://localhost:8080", "rest/api/2", listOf("issue", "ISSUE-1", "createmeta"), emptyList())
         assertEquals("http://localhost:8080/rest/api/2/issue/ISSUE-1/createmeta", urlParts3.toString())
     }
 

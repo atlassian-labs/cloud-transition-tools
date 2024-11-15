@@ -14,12 +14,9 @@ import com.atlassian.ctt.integrations.url.URLParser
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.core.env.Environment
 
 @Configuration
-class CTTServiceConfig(
-    private val env: Environment,
-) {
+class CTTServiceConfig {
     @Value("\${ctt.cloudURL}")
     internal lateinit var cloudURL: String
 

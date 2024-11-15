@@ -70,10 +70,18 @@ mvn test -Dtest=ClassName1,ClassName2 # To set a specific test classes
 Make sure you follow the below guidelines before contributing to the project.
 
 #### Linting and Formatting
-We use Detekt for Linting and Ktlint for formatting. To format and lint the code, run the following command:
+We use Detekt for Linting and Ktlint for formatting.
+- Auto-format the code using
 ```
-mvn detekt:check
-id # To format the code
+mvn ktlint:format
+```
+- Ensure no more formatting errors using
+```
+mvn ktlint:check
+```
+- Check and fix linting errors using
+```
+mvn detekt:check -Ddetekt.config=detekt.yml # To detect lint errors
 ```
 We use Sonarlint for local code quality checks. Install Sonarlint plugin in your IDE and run the code quality checks.
 Make sure all formatting and linting issues are resolved before raising a PR.
@@ -91,6 +99,14 @@ More details at: https://developer.atlassian.com/platform/tool/sonarqube/getting
 Make sure the code quality checks and code coverage checks pass before raising a PR.
 
 Follow standard Kotlin coding conventions.
+
+#### Checklist before raising PR
+1. `mvn ktlint:check` and ensure no errors
+2. `mvn detekt:check -Ddetekt.config=detekt.yml` and ensure no errors
+3. Add unit tests for the code that you have added
+4. `mvn test` and ensure all tests pass
+5. `mvn sonar:sonar` and ensure code quality checks pass
+6. `mvn jacoco:check` and ensure code coverage is maintained
 
 ### Who do I talk to? ###
 

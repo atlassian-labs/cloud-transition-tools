@@ -5,7 +5,9 @@ import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import java.net.URISyntaxException
 
@@ -37,7 +39,8 @@ class JiraV2APIParserTest {
             val serialisedAPIParts = apiParser.serialiseAPIParts(apiParts)
             val expectedAPIParts =
                 mapOf(
-                    "url" to "http://localhost:8080/rest/api/2/issue/ISSUE-1/createmeta?expand=projects.issuetypes.fields",
+                    "url" to
+                        "http://localhost:8080/rest/api/2/issue/ISSUE-1/createmeta?expand=projects.issuetypes.fields",
                     "body" to apiParts.body,
                 )
             assertEquals(expectedAPIParts, serialisedAPIParts)

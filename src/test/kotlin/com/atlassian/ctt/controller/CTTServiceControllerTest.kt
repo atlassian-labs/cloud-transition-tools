@@ -4,7 +4,6 @@ import com.atlassian.ctt.config.CTTServiceConfig
 import com.atlassian.ctt.data.loader.LoaderStatus
 import com.atlassian.ctt.data.loader.LoaderStatusCode
 import com.atlassian.ctt.data.loader.MigrationMappingLoader
-import com.atlassian.ctt.data.loader.MigrationScope
 import com.atlassian.ctt.data.store.MigrationMapping
 import com.atlassian.ctt.data.store.persistent.MigrationMappingRepository
 import com.atlassian.ctt.service.APISanitisationService
@@ -21,7 +20,9 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.web.client.HttpServerErrorException
 
 @WebMvcTest(CTTServiceController::class)
@@ -35,6 +36,7 @@ class CTTServiceControllerTest {
     @MockkBean
     private lateinit var cttConfig: CTTServiceConfig
 
+    @Suppress("unused") // required for mocking
     @MockkBean
     private lateinit var migrationMappingRepository: MigrationMappingRepository
 
@@ -45,12 +47,9 @@ class CTTServiceControllerTest {
     private lateinit var apiSanitisationService: APISanitisationService
 
     private val serverURL = "serverURL"
-    private var cloudUrl = "cloudURL"
     private val entityType = "jira:issue"
     private val serverId = 17499L
     private val cloudId = 10542L
-
-    private val migrationScope = MigrationScope(cloudUrl, serverURL)
 
     @Test
     fun `health check should return OK`() {
@@ -156,7 +155,8 @@ class CTTServiceControllerTest {
 
     @Test
     fun `translate server ID to cloud ID, Failure Case Exception`() {
-        every { cttService.translateServerIdToCloudId(serverURL, entityType, serverId) } throws Exception()
+        every { cttService.translateServerIdToCloudId(serverURL, entityType, serverId) } throws
+            HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)
 
         mockMvc
             .perform(
@@ -203,7 +203,8 @@ class CTTServiceControllerTest {
 
     @Test
     fun `translate cloud ID to server ID, Failure Case Exception`() {
-        every { cttService.translateCloudIdToServerId(serverURL, entityType, cloudId) } throws Exception()
+        every { cttService.translateCloudIdToServerId(serverURL, entityType, cloudId) } throws
+            HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)
 
         mockMvc
             .perform(
@@ -246,7 +247,8 @@ class CTTServiceControllerTest {
     @Test
     fun `sanitise URL failure scenario with exception`() {
         val url = "https://serverURL/unsupported/api/2/issue/17499"
-        every { urlSanitisationService.sanitiseURL(url) } throws Exception()
+        every { urlSanitisationService.sanitiseURL(url) } throws
+            HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)
 
         mockMvc
             .perform(
@@ -300,7 +302,8 @@ class CTTServiceControllerTest {
     fun `sanitise API failure scenario with exception`() {
         val url = "https://serverURL/unsupported/api/2/issue/17499"
         val body = "{}"
-        every { apiSanitisationService.sanitiseAPI(url, body) } throws Exception()
+        every { apiSanitisationService.sanitiseAPI(url, body) } throws
+            HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)
 
         mockMvc
             .perform(
