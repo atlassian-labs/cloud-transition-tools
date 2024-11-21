@@ -32,7 +32,7 @@ Basic Spring Boot project setup with Maven.
 1. Create `applicatoin.properties` file in `src/main/resources` directory. Refer to
    [application.properties](src/main/resources/application.properties.template) for a reference.
 
-2. Update `application.properties` with migration scope, data loader and database configuration.
+2. Update `application.properties` with cloudUrl, data loader and database configuration.
 
 3. Run Maven build and start the Spring Boot application.
 

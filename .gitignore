@@ -11,7 +11,7 @@ dist/
 .scannerwork/
 
 # Database
-data/
+data/*.db
 
 # Compiled Java class files
 *.class
