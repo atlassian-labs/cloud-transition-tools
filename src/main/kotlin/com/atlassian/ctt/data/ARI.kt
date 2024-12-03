@@ -25,9 +25,5 @@ enum class ARI(
     JIRA_ROLE("jira:projectRole"),
     JIRA_SCREEN("jira/classic:screen"),
     JIRA_COMPONENT("jira:projectComponent"),
-    ;
-
-    companion object {
-        fun fromValue(value: String): ARI? = entries.find { it.value == value }
-    }
+    JIRA_USER("jira:user"),
 }

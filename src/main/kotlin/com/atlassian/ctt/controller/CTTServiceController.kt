@@ -5,9 +5,11 @@ import com.atlassian.ctt.data.loader.LoaderStatus
 import com.atlassian.ctt.data.loader.LoaderStatusCode
 import com.atlassian.ctt.service.APISanitisationService
 import com.atlassian.ctt.service.CTTService
+import com.atlassian.ctt.service.JQLSanitisationService
 import com.atlassian.ctt.service.URLSanitisationService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import mu.KotlinLogging
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -31,7 +33,10 @@ class CTTServiceController(
     private val config: CTTServiceConfig,
     private val urlSanitsationService: URLSanitisationService,
     private val apiSanitisationService: APISanitisationService,
+    private val jqlSanitisationService: JQLSanitisationService,
 ) {
+    private val logger = KotlinLogging.logger(this::class.java.name)
+
     @GetMapping("/health")
     @Operation(summary = "Health check", description = "Check if the service is up and running")
     fun health(): ResponseEntity<String> = ResponseEntity.ok("OK")
@@ -112,4 +117,18 @@ class CTTServiceController(
         } catch (e: HttpServerErrorException) {
             ResponseEntity(e.message, e.statusCode)
         }
+
+    @GetMapping("/jql-sanitise")
+    @Operation(summary = "Sanitise JQL", description = "Sanitise a JQL query")
+    fun sanitiseJQL(
+        @RequestParam serverBaseURL: String,
+        @RequestBody jql: String,
+    ): ResponseEntity<out Any> {
+        try {
+            val sanitisedJQL = jqlSanitisationService.sanitiseJQL(serverBaseURL, jql)
+            return ResponseEntity.ok(sanitisedJQL)
+        } catch (e: HttpServerErrorException) {
+            return ResponseEntity(e.message, e.statusCode)
+        }
+    }
 }

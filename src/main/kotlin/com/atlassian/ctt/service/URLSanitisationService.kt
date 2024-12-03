@@ -77,6 +77,7 @@ class URLSanitisationService(
             queryParams.map { (key, value) ->
                 if (isJQLQueryField(key)) {
                     TODO("JSWM-2510: JQL sanitisation is not supported yet")
+                    // return@map key to value
                 }
 
                 if (!isIntegerID(value)) {
@@ -119,6 +120,6 @@ class URLSanitisationService(
         val cloudPathParams = sanitisePathParams(url.baseURL, url.pathParams)
         val cloudQueryParams = sanitiseQueryParams(url.baseURL, url.queryParams)
 
-        return URLParts(ctt.getCloudURL(), url.apiPath, cloudPathParams, cloudQueryParams)
+        return URLParts(ctt.cloudURL, url.apiPath, cloudPathParams, cloudQueryParams)
     }
 }

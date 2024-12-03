@@ -6,10 +6,11 @@ server.servlet.context-path=/ctt
 ctt.cloudURL = <CLOUD_URL>
 
 # Data loader types.
-# only jcma loader is supported for now
+# Values: [jcma]
 ctt.data.loader = jcma
 
 # Data store types.
+# Values: [memory, persistent]
 ctt.data.store = memory
 
 # Database access

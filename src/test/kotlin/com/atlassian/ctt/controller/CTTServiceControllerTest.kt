@@ -8,6 +8,7 @@ import com.atlassian.ctt.data.store.MigrationMapping
 import com.atlassian.ctt.data.store.persistent.MigrationMappingRepository
 import com.atlassian.ctt.service.APISanitisationService
 import com.atlassian.ctt.service.CTTService
+import com.atlassian.ctt.service.JQLSanitisationService
 import com.atlassian.ctt.service.URLSanitisationService
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.coEvery
@@ -45,6 +46,9 @@ class CTTServiceControllerTest {
 
     @MockkBean
     private lateinit var apiSanitisationService: APISanitisationService
+
+    @MockkBean
+    private lateinit var jqlSanitisationService: JQLSanitisationService
 
     private val serverURL = "serverURL"
     private val entityType = "jira:issue"
@@ -310,6 +314,37 @@ class CTTServiceControllerTest {
                 get("/rest/v1/api-sanitise")
                     .param("url", url)
                     .content(body)
+                    .contentType("application/json"),
+            ).andExpect(status().isInternalServerError)
+    }
+
+    @Test
+    fun `sanitise JQL success scenario`() {
+        val jql = "project = 10000"
+        val sanitisedJql = "project = 20000"
+        every { jqlSanitisationService.sanitiseJQL(serverURL, jql) } returns sanitisedJql
+
+        mockMvc
+            .perform(
+                get("/rest/v1/jql-sanitise")
+                    .param("serverBaseURL", serverURL)
+                    .content(jql)
+                    .contentType("application/json"),
+            ).andExpect(status().isOk)
+            .andExpect(content().string(sanitisedJql))
+    }
+
+    @Test
+    fun `sanitise JQL failure scenario with exception`() {
+        val jql = "project = 10000"
+        every { jqlSanitisationService.sanitiseJQL(serverURL, jql) } throws
+            HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)
+
+        mockMvc
+            .perform(
+                get("/rest/v1/jql-sanitise")
+                    .param("serverBaseURL", serverURL)
+                    .content(jql)
                     .contentType("application/json"),
             ).andExpect(status().isInternalServerError)
     }

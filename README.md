@@ -4,7 +4,7 @@ Cloud Transition Tools (CTT)
 A collection of tools and utilities designed to resolve application integration issues following a cloud transition.
 
 Refer to following documents for more details:
-1. [CTT Deign Document](https://hello.atlassian.net/wiki/spaces/CT5/pages/4102829269/RFC+Fixing+External+Integration+Post+Migration)
+1. [CTT Design Document](https://hello.atlassian.net/wiki/spaces/CT5/pages/4102829269/RFC+Fixing+External+Integration+Post+Migration)
 2. [List of Supported Entities](https://hello.atlassian.net/wiki/spaces/CT5/pages/4135101946/Jira+JQL+Fields+affected+by+ID+Mapping)
 
 ### What is this repository for? ###
@@ -29,13 +29,12 @@ Use `Java 17` and `Maven 3.9.9` for development. More details in the Dockerfile.
 
 Basic Spring Boot project setup with Maven.
 
-1. Create `applicatoin.properties` file in `src/main/resources` directory. Refer to
+1. Create `application.properties` file in root directory. Refer to
    [application.properties](src/main/resources/application.properties.template) for a reference.
+2. Make sure to set `cloudURL` in `application.properties` file along with optional values for data store and loader.
+3. If you are using persistent storage, make sure to set the database details as well.
 
-2. Update `application.properties` with cloudUrl, data loader and database configuration.
-
-3. Run Maven build and start the Spring Boot application.
-
+###### Run Maven build and start the Spring Boot application.
 ```
 mvn clean install -DskipTests
 mvn spring-boot:run

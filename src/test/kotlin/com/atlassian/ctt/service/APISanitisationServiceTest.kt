@@ -52,7 +52,7 @@ class APISanitisationServiceTest {
             }
         }
 
-        every { cttService.getCloudURL() } returns cloudURL
+        every { cttService.cloudURL } returns cloudURL
     }
 
     @Test
@@ -90,7 +90,7 @@ class APISanitisationServiceTest {
     @Test
     fun `sanitise body params with cloud service down`(): Unit =
         runBlocking {
-            every { cttService.getCloudURL() } throws
+            every { cttService.cloudURL } throws
                 HttpServerErrorException(
                     HttpStatus.INTERNAL_SERVER_ERROR,
                     "Cloud Service is down. Please try again later",

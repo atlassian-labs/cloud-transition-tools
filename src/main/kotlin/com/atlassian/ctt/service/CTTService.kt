@@ -12,8 +12,8 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import org.springframework.beans.factory.DisposableBean
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpServerErrorException
@@ -27,7 +27,7 @@ import kotlin.jvm.Throws
  */
 @Service
 class CTTService(
-    @Value("\${ctt.cloudURL}") private val cloudURL: String,
+    @Autowired val cloudURL: String,
     @Qualifier("migrationStore") private val dataStore: MigrationStore,
 ) : DisposableBean {
     private val logger = KotlinLogging.logger {}
@@ -81,8 +81,10 @@ class CTTService(
         }
     }
 
-    fun getCloudURL(): String = cloudURL
-
+    /* Loads migration data mapping for a server URL
+     * If reload is true, data will be loaded again - Pass true for initial load
+     * If reload is false, it will skip loading if the loader is already present and return load status.
+     */
     fun load(
         loader: MigrationMappingLoader,
         reload: Boolean = false,
@@ -117,7 +119,13 @@ class CTTService(
     ): MigrationMapping {
         val loadStatus = getLoaderStatus(serverURL)
         throwOnLoaderStatus(loadStatus, serverURL)
-        val cloudID = dataStore.getCloudId(serverURL, entityType, serverId) ?: 0
+
+        val cloudID =
+            dataStore.getCloudId(serverURL, entityType, serverId) ?: run {
+                logger.warn { "Cloud ID not found for $serverURL, $entityType, $serverId" }
+                0
+            }
+
         return MigrationMapping(serverURL, entityType, serverId, cloudID)
     }
 
@@ -129,7 +137,11 @@ class CTTService(
     ): MigrationMapping {
         val status = getLoaderStatus(serverURL)
         throwOnLoaderStatus(status, serverURL)
-        val serverId = dataStore.getServerId(serverURL, entityType, cloudId) ?: 0
+        val serverId =
+            dataStore.getServerId(serverURL, entityType, cloudId) ?: run {
+                logger.warn { "Server ID not found for $serverURL, $entityType, $cloudId" }
+                0
+            }
         return MigrationMapping(
             serverURL,
             entityType,

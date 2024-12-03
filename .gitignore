@@ -23,7 +23,7 @@ data/*.db
 *.log
 
 # Package files
-*.jar
+# *.jar
 
 # Maven
 target/

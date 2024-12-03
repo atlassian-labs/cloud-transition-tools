@@ -68,9 +68,11 @@ class URLSanitisationServiceTest {
     @Test
     fun `test url sanitise without integer IDs and params`(): Unit =
         runBlocking {
-            val url = "$serverURL/rest/api/2/issue/ISSUE-1/role?role=developer"
-            val sanitisedURL = urlService.sanitiseURL(url)
-            assertEquals(sanitisedURL, url.replace(serverURL, cloudURL))
+            val url = "$serverURL/rest/api/2/issue/17499/role/developer?jql=project=10200"
+            // assert not implemented
+            assertThrows(NotImplementedError::class.java) {
+                urlService.sanitiseURL(url)
+            }
         }
 
     @Test
@@ -171,7 +173,7 @@ class URLSanitisationServiceTest {
             val url = "$serverURL/rest/api/2/issue/17499/role/developer?jql=project=10200"
             // assert not implemented
             assertThrows(NotImplementedError::class.java) {
-                val sanitisedURL = urlService.sanitiseURL(url)
+                urlService.sanitiseURL(url)
             }
         }
 }

@@ -9,22 +9,41 @@ import com.atlassian.ctt.data.store.persistent.MigrationMappingRepository
 import com.atlassian.ctt.data.store.persistent.PersistentMigrationStore
 import com.atlassian.ctt.integrations.api.APIParser
 import com.atlassian.ctt.integrations.api.JiraV2ApiParser
+import com.atlassian.ctt.integrations.jql.JQLSanitisationLibrary
 import com.atlassian.ctt.integrations.url.JiraV2URLParser
 import com.atlassian.ctt.integrations.url.URLParser
+import jakarta.annotation.PostConstruct
+import org.springframework.beans.factory.BeanCreationException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import java.io.File
 
 @Configuration
 class CTTServiceConfig {
-    @Value("\${ctt.cloudURL}")
-    internal lateinit var cloudURL: String
+    @Value("\${ctt.cloudURL:#{null}}")
+    internal var cloudURL: String? = null
 
-    @Value("\${ctt.data.store}")
+    @Value("\${ctt.data.store:memory}")
     internal lateinit var dataStoreType: String
 
-    @Value("\${ctt.data.loader}")
+    @Value("\${ctt.data.loader:jcma}")
     internal lateinit var dataLoaderType: String
+
+    @PostConstruct
+    fun checkPropertiesFile() {
+        val applicationInitFile = "application.properties"
+        if (!File(applicationInitFile).exists()) {
+            throw BeanCreationException(
+                "Error: application.properties file is missing. Sprint application won't be auto-loaded",
+            )
+        }
+
+        requireNotNull(cloudURL) { "ctt.cloudURL must be set in application.properties file" }
+    }
+
+    @Bean
+    fun cloudURL(): String = cloudURL!!
 
     @Bean
     fun migrationStore(repository: MigrationMappingRepository?): MigrationStore =
@@ -42,7 +61,7 @@ class CTTServiceConfig {
         serverURL: String,
         authHeader: String,
     ): MigrationMappingLoader {
-        val migrationScope = MigrationScope(cloudURL, serverURL)
+        val migrationScope = MigrationScope(cloudURL!!, serverURL)
         return when (dataLoaderType) {
             "jcma" -> JCMAMigrationMappingLoader(migrationScope, authHeader)
             else -> throw IllegalArgumentException("Unsupported data loader type: $dataLoaderType")
@@ -60,4 +79,7 @@ class CTTServiceConfig {
         // Only Jira V2 URL/ API is supported
         return JiraV2ApiParser()
     }
+
+    @Bean
+    fun jqlSanitisationLibrary(): JQLSanitisationLibrary = JQLSanitisationLibrary()
 }
