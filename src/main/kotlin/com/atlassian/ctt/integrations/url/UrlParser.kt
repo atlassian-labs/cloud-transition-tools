@@ -1,6 +1,7 @@
 package com.atlassian.ctt.integrations.url
 
 import java.net.URISyntaxException
+import java.net.URLEncoder
 
 data class URLParts(
     val baseURL: String,
@@ -15,7 +16,7 @@ data class URLParts(
                 .takeIf { it.isNotEmpty() }
                 ?.joinToString(separator = "&", prefix = "?") {
                     it.first + "=" +
-                        it.second
+                        URLEncoder.encode(it.second, "UTF-8")
                 }.orEmpty()
 }
 
@@ -27,5 +28,5 @@ data class URLParts(
 * */
 interface URLParser {
     @Throws(URISyntaxException::class)
-    fun parseURL(url: String): URLParts
+    fun parseURL(urlString: String): URLParts
 }

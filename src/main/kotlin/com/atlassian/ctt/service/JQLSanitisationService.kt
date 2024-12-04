@@ -16,6 +16,8 @@ class JQLSanitisationService(
 ) {
     private val logger = KotlinLogging.logger(this::class.java.name)
 
+    private fun isIntegerID(value: String) = value.matches(Regex("^[0-9]+$"))
+
     /**
      * Sanitises the given JQL string by extracting and replacing identifiers.
      *
@@ -30,7 +32,7 @@ class JQLSanitisationService(
         var sanitisedJql = jql
         try {
             logger.info { "Sanitising JQL: $jql" }
-            val extractedIdentifiers = jqlSanitisationLibrary.sanitiser.extractIdentifiers(jql)
+            val extractedIdentifiers: List<IdentifierSet> = jqlSanitisationLibrary.sanitiser.extractIdentifiers(jql)
             logger.info { "JqlLibraryCall: Extracted identifiers $extractedIdentifiers" }
 
             val mappedIdentifiers =
@@ -115,42 +117,50 @@ class JQLSanitisationService(
         extractedIdentifiers: List<IdentifierSet>,
         serverURL: String,
     ): List<MigrationMapping> {
-        return extractedIdentifiers.flatMap { identifierSet ->
-            // Get the entityType from the identifierTypeToEntityType map
-            val entityType = typeToAriMap[identifierSet.type]
+        val mappings =
+            extractedIdentifiers
+                .flatMap { identifierSet ->
+                    // Get the entityType from the identifierTypeToEntityType map
+                    val entityType = typeToAriMap[identifierSet.type]
 
-            if (entityType == null) {
-                logger.warn { "EntityType for ${identifierSet.type} not found, skipping." }
-                return@flatMap emptyList<MigrationMapping>()
-            }
+                    if (entityType == null) {
+                        logger.warn { "EntityType for ${identifierSet.type} not found, skipping." }
+                        return@flatMap emptyList<MigrationMapping>()
+                    }
 
-            // For each identifier in the identifiers set, we call translateServerIdToCloudId
-            identifierSet.identifiers.map { serverId ->
-                val cloudId =
-                    ctt
-                        .translateServerIdToCloudId(
-                            serverURL,
-                            entityType.value,
-                            serverId.toLong(),
-                        ).cloudId
-                        .let {
-                            if (it == 0L) {
-                                logger.warn {
-                                    "Failed to translate serverId $serverId to cloudId. Falling back to serverId."
-                                }
-                                serverId.toLong()
-                            } else {
-                                it
-                            }
+                    // For each identifier in the identifiers set, we call translateServerIdToCloudId
+                    identifierSet.identifiers.map { serverId ->
+                        if (!isIntegerID(serverId)) {
+                            logger.warn { "Invalid serverId $serverId for entityType ${entityType.value}, skipping." }
+                            return@map null
                         }
-                MigrationMapping(
-                    serverUrl = serverURL,
-                    entityType = entityType.value,
-                    serverId = serverId.toLong(),
-                    cloudId = cloudId,
-                )
-            }
-        }
+                        val cloudId =
+                            ctt
+                                .translateServerIdToCloudId(
+                                    serverURL,
+                                    entityType.value,
+                                    serverId.toLong(),
+                                ).cloudId
+                                .let {
+                                    if (it == 0L) {
+                                        logger.warn {
+                                            "Failed to translate $serverId to cloudId. Falling back to serverId."
+                                        }
+                                        serverId.toLong()
+                                    } else {
+                                        it
+                                    }
+                                }
+                        MigrationMapping(
+                            serverUrl = serverURL,
+                            entityType = entityType.value,
+                            serverId = serverId.toLong(),
+                            cloudId = cloudId,
+                        )
+                    }
+                }.filterNotNull()
+
+        return mappings
     }
 
     /**

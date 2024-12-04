@@ -4,7 +4,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
-import java.net.URISyntaxException
+import java.net.MalformedURLException
 
 class JiraV2URLParserTest {
     private val urlParser = JiraV2URLParser()
@@ -37,7 +37,7 @@ class JiraV2URLParserTest {
     fun `test url parser with invalid url`(): Unit =
         runBlocking {
             val url = "invalidURL"
-            assertThrows(URISyntaxException::class.java) {
+            assertThrows(MalformedURLException::class.java) {
                 urlParser.parseURL(url)
             }
         }
@@ -46,7 +46,7 @@ class JiraV2URLParserTest {
     fun `test url parser with invalid protocol`(): Unit =
         runBlocking {
             val url = "localhost:8080/rest/api/2/issue/ISSUE-1"
-            assertThrows(URISyntaxException::class.java) {
+            assertThrows(MalformedURLException::class.java) {
                 urlParser.parseURL(url)
             }
         }
@@ -55,7 +55,7 @@ class JiraV2URLParserTest {
     fun `test url parser with invalid path`(): Unit =
         runBlocking {
             val url = "http://localhost:8080/"
-            assertThrows(URISyntaxException::class.java) {
+            assertThrows(MalformedURLException::class.java) {
                 urlParser.parseURL(url)
             }
         }
@@ -64,7 +64,7 @@ class JiraV2URLParserTest {
     fun `test url parser with no api path`(): Unit =
         runBlocking {
             val url = "http://localhost:8080/some/reset/api/2"
-            assertThrows(URISyntaxException::class.java) {
+            assertThrows(MalformedURLException::class.java) {
                 urlParser.parseURL(url)
             }
         }
@@ -73,7 +73,7 @@ class JiraV2URLParserTest {
     fun `test url parser with no invalid path version`(): Unit =
         runBlocking {
             val url = "http://localhost:8080/some/reset/api/v2"
-            assertThrows(URISyntaxException::class.java) {
+            assertThrows(MalformedURLException::class.java) {
                 urlParser.parseURL(url)
             }
         }
@@ -104,7 +104,7 @@ class JiraV2URLParserTest {
     fun `test url parser with invalid api`(): Unit =
         runBlocking {
             val url = "http://localhost:8080/rest/unknown/2"
-            assertThrows(URISyntaxException::class.java) {
+            assertThrows(MalformedURLException::class.java) {
                 urlParser.parseURL(url)
             }
         }
@@ -113,7 +113,7 @@ class JiraV2URLParserTest {
     fun `test url parser with valid rest api path unsupported version`(): Unit =
         runBlocking {
             val url = "http://localhost:8080/rest/api/1"
-            assertThrows(URISyntaxException::class.java) {
+            assertThrows(MalformedURLException::class.java) {
                 urlParser.parseURL(url)
             }
         }

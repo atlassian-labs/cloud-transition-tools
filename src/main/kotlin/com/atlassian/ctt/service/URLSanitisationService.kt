@@ -15,16 +15,14 @@ Sanitises Server URL to Cloud URL by identifying and translating all integer IDs
 @Service
 class URLSanitisationService(
     private val ctt: CTTService,
+    private val jqlService: JQLSanitisationService,
     private val urlParser: URLParser,
 ) {
     private val logger = KotlinLogging.logger(this::class.java.name)
 
     private fun isIntegerID(value: String) = value.matches(Regex("^[0-9]+$"))
 
-    private fun isJQLQueryField(key: String): Boolean {
-        val jqls = listOf("jql", "query", "currentJQL")
-        return jqls.contains(key)
-    }
+    private fun isJQLQueryField(key: String) = key in listOf("jql", "query", "currentJQL")
 
     private fun sanitisePathParams(
         serverBaseUrl: String,
@@ -76,8 +74,7 @@ class URLSanitisationService(
         val sanitisedQueryParams =
             queryParams.map { (key, value) ->
                 if (isJQLQueryField(key)) {
-                    TODO("JSWM-2510: JQL sanitisation is not supported yet")
-                    // return@map key to value
+                    return@map key to jqlService.sanitiseJQL(serverBaseUrl, value)
                 }
 
                 if (!isIntegerID(value)) {

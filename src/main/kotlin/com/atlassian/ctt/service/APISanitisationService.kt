@@ -11,10 +11,13 @@ import org.springframework.stereotype.Service
 @Service
 class APISanitisationService(
     private val ctt: CTTService,
-    private val apiParser: APIParser,
     private val urlService: URLSanitisationService,
+    private val jqlService: JQLSanitisationService,
+    private val apiParser: APIParser,
 ) {
     private val logger = KotlinLogging.logger(this::class.java.name)
+
+    private fun isJQLField(key: String) = key in listOf("jql")
 
     fun sanitiseAPI(
         url: String,
@@ -42,10 +45,9 @@ class APISanitisationService(
 
     private fun translateEntity(
         serverBaseUrl: String,
-        key: String,
+        entity: String,
         id: Number,
     ): Number {
-        val entity = apiParser.sanitiseKey(key)
         val ari =
             apiBodyParams[entity]?.value ?: run {
                 logger.warn { "Skipping translation as no ARI mapping found for entity: $entity" }
@@ -66,26 +68,31 @@ class APISanitisationService(
         val sanitisedBody =
             bodyParts
                 .map { (key, value) ->
-                    val customFieldKey = apiParser.keyAsCustomField(key)
+                    val entity = apiParser.sanitiseKey(key)
+                    val customFieldKey = apiParser.keyAsCustomField(entity)
                     if (customFieldKey != null) {
                         val (customField, customFieldId) = customFieldKey
                         val cloudCustomField =
                             customField + translateEntity(serverBaseUrl, customField, customFieldId.toLong()).toString()
                         return@map cloudCustomField to value
                     }
+                    if (isJQLField(entity)) {
+                        return@map key to jqlService.sanitiseJQL(serverBaseUrl, value as String)
+                    }
                     when (value) {
                         is String -> key to value
-                        is Number -> key to translateEntity(serverBaseUrl, key, value)
+                        is Number -> key to translateEntity(serverBaseUrl, entity, value)
                         is List<*> -> {
                             val sanitisedList =
                                 value.map {
                                     when (it) {
-                                        is Number -> translateEntity(serverBaseUrl, key, it)
+                                        is Number -> translateEntity(serverBaseUrl, entity, it)
                                         else -> it
                                     }
                                 }
                             key to sanitisedList
                         }
+
                         else -> {
                             key to value
                         }

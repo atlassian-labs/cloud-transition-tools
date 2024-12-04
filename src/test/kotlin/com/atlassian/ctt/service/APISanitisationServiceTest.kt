@@ -15,7 +15,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import org.springframework.web.client.HttpServerErrorException
-import java.net.URISyntaxException
+import java.net.MalformedURLException
 
 class APISanitisationServiceTest {
     // Create CTT Service with dummy data
@@ -26,10 +26,11 @@ class APISanitisationServiceTest {
     private val cloudIds = listOf(10542L, 10300L, 10541L)
 
     private val cttService = mockk<CTTService>(relaxed = true)
+    private val jqlService = mockk<JQLSanitisationService>(relaxed = true)
     private val urlParser = JiraV2URLParser()
     private val apiParser = JiraV2ApiParser()
-    private val urlService = URLSanitisationService(cttService, urlParser)
-    private val apiService = APISanitisationService(cttService, apiParser, urlService)
+    private val urlService = URLSanitisationService(cttService, jqlService, urlParser)
+    private val apiService = APISanitisationService(cttService, urlService, jqlService, apiParser)
     private val mockUrl = "$serverURL/rest/api/2/issue/PRJ-123"
 
     @BeforeEach
@@ -82,7 +83,7 @@ class APISanitisationServiceTest {
     @Test
     fun `sanitise body params with invalid url`(): Unit =
         runBlocking {
-            assertThrows(URISyntaxException::class.java) {
+            assertThrows(MalformedURLException::class.java) {
                 apiService.sanitiseAPI("invalid url", "invalid json")
             }
         }
@@ -227,6 +228,40 @@ class APISanitisationServiceTest {
                 """.trimIndent().let {
                     jacksonObjectMapper().readValue<Map<String, Any>>(it)
                 }
+            val result = apiService.sanitiseAPI(mockUrl, body)
+            assertEquals(mockUrl.replace(serverURL, cloudURL), result["url"])
+            assertEquals(expectedBody.toString(), result["body"].toString())
+        }
+
+    @Test
+    fun `test sanitise with jql`(): Unit =
+        runBlocking {
+            val body =
+                """
+                {
+                    "issues": ["ISS-1", 17499, 10000],
+                    "issueId": 17499,
+                    "boardId" : 10000,
+                    "jql" : "id = 17499 AND project = 10200"
+                }
+                """.trimIndent()
+            val expectedBody =
+                """
+                {
+                    "issues": ["ISS-1", 10542, 10000],
+                    "issueId": 10542,
+                    "boardId" : 10000,
+                    "jql" : "id = 10542 AND project = 10300"
+                }
+                """.trimIndent().let {
+                    jacksonObjectMapper().readValue<Map<String, Any>>(it)
+                }
+            every {
+                jqlService.sanitiseJQL(
+                    serverURL,
+                    "id = 17499 AND project = 10200",
+                )
+            } returns "id = 10542 AND project = 10300"
             val result = apiService.sanitiseAPI(mockUrl, body)
             assertEquals(mockUrl.replace(serverURL, cloudURL), result["url"])
             assertEquals(expectedBody.toString(), result["body"].toString())

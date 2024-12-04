@@ -11,7 +11,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import org.springframework.web.client.HttpServerErrorException
-import java.net.URISyntaxException
+import java.net.MalformedURLException
+import java.net.URLEncoder
 
 class URLSanitisationServiceTest {
     // Create CTT Service with dummy data
@@ -22,8 +23,9 @@ class URLSanitisationServiceTest {
     private val cloudIds = listOf(10542L, 10300L, 10541L)
 
     private val cttService = mockk<CTTService>(relaxed = true)
+    private val jqlService = mockk<JQLSanitisationService>(relaxed = true)
     private val urlParser = JiraV2URLParser()
-    private val urlService = URLSanitisationService(cttService, urlParser)
+    private val urlService = URLSanitisationService(cttService, jqlService, urlParser)
 
     @BeforeEach
     fun setUp() {
@@ -45,14 +47,14 @@ class URLSanitisationServiceTest {
             }
         }
 
-        every { cttService.getCloudURL() } returns cloudURL
+        every { cttService.cloudURL } returns cloudURL
     }
 
     @Test
     fun `test url sanitisation with invalid url`(): Unit =
         runBlocking {
             val url = "https://serverURL/unsupported/api/2/issue/17499"
-            assertThrows(URISyntaxException::class.java) {
+            assertThrows(MalformedURLException::class.java) {
                 urlService.sanitiseURL(url)
             }
         }
@@ -63,16 +65,6 @@ class URLSanitisationServiceTest {
             val url = "$serverURL/rest/api/2/issue/ISSUE-1"
             val sanitisedURL = urlService.sanitiseURL(url)
             assertEquals(sanitisedURL, url.replace(serverURL, cloudURL))
-        }
-
-    @Test
-    fun `test url sanitise without integer IDs and params`(): Unit =
-        runBlocking {
-            val url = "$serverURL/rest/api/2/issue/17499/role/developer?jql=project=10200"
-            // assert not implemented
-            assertThrows(NotImplementedError::class.java) {
-                urlService.sanitiseURL(url)
-            }
         }
 
     @Test
@@ -168,12 +160,17 @@ class URLSanitisationServiceTest {
         }
 
     @Test
-    fun `test jql sanitisation graceful exit`(): Unit =
+    fun `test jql sanitisation with url search - all fields`(): Unit =
         runBlocking {
-            val url = "$serverURL/rest/api/2/issue/17499/role/developer?jql=project=10200"
-            // assert not implemented
-            assertThrows(NotImplementedError::class.java) {
-                urlService.sanitiseURL(url)
+            val serverJql = "id<17499 OR project=SMP OR filter != 10100"
+            val expectedJql = "id<10542 OR project=SMP OR filter != 10100"
+            every { jqlService.sanitiseJQL(serverURL, serverJql) } returns expectedJql
+            val jqlFields = listOf("jql", "query", "currentJQL")
+            jqlFields.forEach {
+                val url = "$serverURL/rest/api/2/search?maxResults=100&fields=priority&$it=$serverJql"
+                val sanitisedURL = urlService.sanitiseURL(url)
+                val expected = URLEncoder.encode(expectedJql, "UTF-8")
+                assertEquals(sanitisedURL, "$cloudURL/rest/api/2/search?maxResults=100&fields=priority&$it=$expected")
             }
         }
 }

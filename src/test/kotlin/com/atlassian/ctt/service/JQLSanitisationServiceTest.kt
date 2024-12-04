@@ -94,6 +94,38 @@ class JQLSanitisationServiceTest {
     }
 
     @Test
+    fun `test sanitiseJQL successfully sanitises JQL string without integer IDs`() {
+        val jql = "project = SMP AND issue in (SMP-1, SMP-2) OR issuetype = 10000"
+        val expectedJql = "project = SMP AND issue in (SMP-1, SMP-2) OR issuetype = 10000"
+        val extractedIdentifiers =
+            listOf(
+                IdentifierSet(
+                    IdentifierType.PROJECT_IDENTIFIER,
+                    setOf("SMP"),
+                ),
+                IdentifierSet(
+                    IdentifierType.ISSUE_IDENTIFIER,
+                    setOf("SMP-1", "SMP-2"),
+                ),
+            )
+        every { sanitisationLibrary.sanitiser.extractIdentifiers(jql) } returns extractedIdentifiers
+        every {
+            cttService.translateServerIdToCloudId(serverURL, ARI.JIRA_ISSUETYPE.value, "10000".toLong())
+        } returns
+            MigrationMapping(
+                serverUrl = serverURL,
+                entityType = ARI.JIRA_PROJECT.toString(),
+                serverId = 10000,
+                cloudId = 10500,
+            )
+        every { sanitisationLibrary.sanitiser.sanitiseJql(jql, any()) } returns expectedJql
+        assertEquals(
+            expectedJql,
+            jqlSanitisationService.sanitiseJQL(serverURL, jql),
+        )
+    }
+
+    @Test
     fun `test sanitiseJQL doesn't update JQL when JQL is invalid`() {
         val invalidJQL = "invalid jql"
 
@@ -218,6 +250,23 @@ class JQLSanitisationServiceTest {
                 cloudId = 10500,
             )
 
+        every { sanitisationLibrary.sanitiser.sanitiseJql(jql, any()) } returns expectedJql
+        val sanitizedJQL = jqlSanitisationService.sanitiseJQL(serverURL, jql)
+
+        assertEquals(expectedJql, sanitizedJQL)
+    }
+
+    @Test
+    fun `test jql sanitisation for user identifier - not implemented currently`() {
+        val jql = "assignee = admin"
+        val expectedJql = "assignee = unknown"
+        every { sanitisationLibrary.sanitiser.extractIdentifiers(jql) } returns
+            listOf(
+                IdentifierSet(
+                    IdentifierType.USER_IDENTIFIER,
+                    setOf("admin"),
+                ),
+            )
         every { sanitisationLibrary.sanitiser.sanitiseJql(jql, any()) } returns expectedJql
         val sanitizedJQL = jqlSanitisationService.sanitiseJQL(serverURL, jql)
 

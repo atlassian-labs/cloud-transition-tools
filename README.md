@@ -104,9 +104,8 @@ Follow standard Kotlin coding conventions.
 2. `mvn detekt:check -Ddetekt.config=detekt.yml` and ensure no errors
 3. Add unit tests for the code that you have added
 4. `mvn test` and ensure all tests pass
-5. `mvn sonar:sonar` and ensure code quality checks pass
-6. `mvn jacoco:check` and ensure code coverage is maintained
+5. ensure code coverage and quality with sonarqube
 
 ### Who do I talk to? ###
-
-* Please contact Vineeth T(@vkumart) for any issues and suggestions.
+Vineeth Kumar T(@vkumart)
+Nitin Suri(@nsuri2)

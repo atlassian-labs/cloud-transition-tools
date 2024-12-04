@@ -33,6 +33,7 @@ class JiraV2ApiParser(
      */
     override fun keyAsCustomField(key: String): Pair<String, Number>? {
         val customFieldIdentifier = "customfield_"
+
         val matchResult = Regex("(.*$customFieldIdentifier)(\\d+)").find(key)
         return matchResult?.let {
             it.groupValues[1] to it.groupValues[2].toLong()

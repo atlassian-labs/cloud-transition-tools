@@ -218,7 +218,7 @@ class CTTServiceTest {
     @Test
     fun `test cloud url`(): Unit =
         runBlocking {
-            assertEquals(cttService.getCloudURL(), cloudUrl)
+            assertEquals(cttService.cloudURL, cloudUrl)
         }
 
     @Test

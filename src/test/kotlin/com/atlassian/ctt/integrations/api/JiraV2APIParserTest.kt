@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
-import java.net.URISyntaxException
+import java.net.MalformedURLException
 
 class JiraV2APIParserTest {
     private val apiParser = JiraV2ApiParser()
@@ -80,7 +80,7 @@ class JiraV2APIParserTest {
     fun `parse should throw exception on invalid url`(): Unit =
         runBlocking {
             val url = "invalid_url"
-            assertThrows(URISyntaxException::class.java) {
+            assertThrows(MalformedURLException::class.java) {
                 apiParser.parseAPI(url, null)
             }
         }
