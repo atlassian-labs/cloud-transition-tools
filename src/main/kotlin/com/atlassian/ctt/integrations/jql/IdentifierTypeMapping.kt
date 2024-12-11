@@ -22,5 +22,6 @@ object IdentifierTypeMapping {
             IdentifierType.COMPONENT_IDENTIFIER to ARI.JIRA_COMPONENT,
             IdentifierType.PROJECT_VERSION_IDENTIFIER to ARI.JIRA_VERSION,
             IdentifierType.USER_IDENTIFIER to ARI.JIRA_USER,
+            IdentifierType.ISSUE_SECURITY_LEVEL_IDENTIFIER to ARI.JIRA_ISSUE_SECURITY_LEVEL,
         )
 }

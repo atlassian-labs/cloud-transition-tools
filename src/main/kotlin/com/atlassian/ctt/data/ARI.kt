@@ -26,4 +26,5 @@ enum class ARI(
     JIRA_SCREEN("jira/classic:screen"),
     JIRA_COMPONENT("jira:projectComponent"),
     JIRA_USER("jira:user"),
+    JIRA_ISSUE_SECURITY_LEVEL("jira/classic:issueSecurityLevel"),
 }

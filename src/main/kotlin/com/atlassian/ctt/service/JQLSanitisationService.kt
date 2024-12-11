@@ -18,6 +18,17 @@ class JQLSanitisationService(
 
     private fun isIntegerID(value: String) = value.matches(Regex("^[0-9]+$"))
 
+    /*
+     * Convert the custom field key into a pair of the prefix and the custom field number
+     * Returns null if the key is not a custom field key
+     */
+    private fun customFieldValue(key: String): String? {
+        val matchResult = Regex("(cf\\[)(\\d+)(])").find(key)
+        return matchResult?.let {
+            it.groupValues[2]
+        }
+    }
+
     /**
      * Sanitises the given JQL string by extracting and replacing identifiers.
      *
@@ -90,20 +101,18 @@ class JQLSanitisationService(
         val identifiers = identifierSet.identifiers
 
         if (identifiers.isEmpty()) {
-            logger.warn { "Empty Identifiers for: $identifierType, skipping." }
+            logger.info { "Empty Identifiers for: $identifierType, skipping." }
             return
         }
 
         val ari = typeToAriMap[identifierType]
         if (ari == null) {
-            logger.warn { "Unsupported IdentifierType: $identifierType, skipping." }
+            logger.error { "Unsupported IdentifierType: $identifierType. No sanitisation happens for this entity" }
             return
         }
 
         val relevantMappings = mappings.filter { it.entityType == ari.value }
-        relevantMappings.forEach { mapping ->
-            addMappingToIdentifiersMap(identifierType, identifiers, mapping, identifiersMap)
-        }
+        addMappingToIdentifiersMap(identifierType, identifiers, relevantMappings, identifiersMap)
     }
 
     /**
@@ -129,7 +138,8 @@ class JQLSanitisationService(
                     }
 
                     // For each identifier in the identifiers set, we call translateServerIdToCloudId
-                    identifierSet.identifiers.map { serverId ->
+                    identifierSet.identifiers.map { serverKey ->
+                        val serverId = customFieldValue(serverKey) ?: serverKey
                         if (!isIntegerID(serverId)) {
                             logger.warn { "Invalid serverId $serverId for entityType ${entityType.value}, skipping." }
                             return@map null
@@ -168,28 +178,28 @@ class JQLSanitisationService(
      *
      * @param identifierType The type of the identifier.
      * @param identifiers The set of server IDs for this identifier type.
-     * @param mapping The migration mapping containing the cloud ID.
+     * @param mappings The migration mappings containing for the given identifier type.
      * @param identifiersMap The main identifiers map to update.
      */
     private fun addMappingToIdentifiersMap(
         identifierType: IdentifierType,
         identifiers: Set<String>,
-        mapping: MigrationMapping,
+        mappings: List<MigrationMapping>,
         identifiersMap: MutableMap<IdentifierType, MutableMap<String, String>>,
     ) {
         // Get the inner mapping for the identifierType or create it if it doesn't exist
         val innerMapping = identifiersMap.getOrPut(identifierType) { mutableMapOf() }
 
-        // Update the inner mapping for each serverId
-        identifiers.forEach { serverId ->
+        // Look for server-to-cloud ID mappings for each identifier and update the inner mapping
+        identifiers.forEach { serverKey ->
             run {
-                if (serverId.toLong() == mapping.serverId) {
-                    innerMapping[serverId] = mapping.cloudId.toString()
-                    logger.info {
-                        "Updated mapping for identifierType $identifierType: " +
-                            " serverId $serverId -> cloudId ${mapping.cloudId}"
+                val serverId = customFieldValue(serverKey) ?: serverKey
+                val cloudId =
+                    mappings.find { it.serverId == serverId.toLong() }?.cloudId?.toString() ?: run {
+                        logger.warn { "No mapping found for serverId $serverId, reusing serverId" }
+                        serverId
                     }
-                }
+                innerMapping[serverKey] = if (customFieldValue(serverKey) != null) "cf[$cloudId]" else cloudId
             }
         }
     }
