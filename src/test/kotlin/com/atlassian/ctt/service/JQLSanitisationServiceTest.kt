@@ -30,6 +30,45 @@ class JQLSanitisationServiceTest {
     }
 
     @Test
+    fun `test jqlSanitisation Library is integrated and initialised correctly`() {
+        val sanitisationLibrary = JQLSanitisationLibrary()
+        val sanitiser = sanitisationLibrary.sanitiser
+
+        val jql = "project = 10000 AND issue in (20000, 20001) and assignee = 30000"
+        val extractedIdentifiers =
+            listOf(
+                IdentifierSet(
+                    IdentifierType.CUSTOM_FIELD_IDENTIFIER,
+                    setOf(),
+                ),
+                IdentifierSet(
+                    IdentifierType.PROJECT_IDENTIFIER,
+                    setOf("10000"),
+                ),
+                IdentifierSet(
+                    IdentifierType.ISSUE_IDENTIFIER,
+                    setOf("20000", "20001"),
+                ),
+                IdentifierSet(
+                    IdentifierType.USER_IDENTIFIER,
+                    setOf("30000"),
+                ),
+            )
+        assertEquals(extractedIdentifiers, sanitiser.extractIdentifiers(jql))
+
+        val mappedIdentifiers =
+            mapOf(
+                IdentifierType.PROJECT_IDENTIFIER to mapOf("10000" to "10500"),
+                IdentifierType.ISSUE_IDENTIFIER to mapOf("20000" to "20500", "20001" to "20501"),
+                IdentifierType.USER_IDENTIFIER to mapOf("30000" to "30500"),
+            )
+        assertEquals(
+            "project = 10500 AND issue in (20500, 20501) AND assignee = 30500",
+            sanitiser.sanitiseJql(jql, mappedIdentifiers),
+        )
+    }
+
+    @Test
     fun `test sanitiseJQL successfully sanitises JQL string`() {
         val jql = "project = 10000 AND issue in (20000, 20001) and assignee = 30000"
         val expectedJql = "project = 10500 AND issue in (20500, 20501) AND assignee = 30500"

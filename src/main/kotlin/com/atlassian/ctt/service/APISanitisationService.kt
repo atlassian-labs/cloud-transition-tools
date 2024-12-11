@@ -65,6 +65,7 @@ class APISanitisationService(
         serverBaseUrl: String,
         bodyParts: Map<String, Any>,
     ): Map<String, Any> {
+        logger.info { "Sanitising request body: $bodyParts for $serverBaseUrl" }
         val sanitisedBody =
             bodyParts
                 .map { (key, value) ->
@@ -99,6 +100,7 @@ class APISanitisationService(
                     }
                 }.toMap()
 
+        logger.info { "Sanitised request body: $sanitisedBody for $serverBaseUrl" }
         return sanitisedBody
     }
 }

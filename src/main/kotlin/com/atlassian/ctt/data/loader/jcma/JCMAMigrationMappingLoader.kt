@@ -13,7 +13,7 @@ import mu.KotlinLogging
 
 const val JCMA_ID_MAPPING_URL = "/rest/migration/latest/report/id-mappings"
 const val JCMA_RELOAD_PARAM = "invalidateCache"
-const val JCMA_RETRY_INTERVAL = 5000L // 5 seconds
+const val JCMA_RETRY_INTERVAL = 10000L // 10 seconds
 
 /*
  * JCMAMigrationMappingLoader loads ID mappings from Jira Cloud Migration Assistant (JCMA).

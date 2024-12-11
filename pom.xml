@@ -141,25 +141,9 @@
         <dependency>
             <groupId>io.atlassian</groupId>
             <artifactId>jql-sanitisation</artifactId>
-            <version>1.0.0</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/libs/jql-sanitisation-1.0.0-plain.jar</systemPath>
+            <version>0.0.1-SNAPSHOT</version>
         </dependency>
-        <dependency>
-            <groupId>com.atlassian.jql.grammar</groupId>
-            <artifactId>jql-parser</artifactId>
-            <version>0.0.5</version>
-        </dependency>
-        <dependency>
-            <groupId>com.atlassian.migration.jira</groupId>
-            <artifactId>jira-core</artifactId>
-            <version>2.0.561</version>
-        </dependency>
-        <dependency>
-            <groupId>com.atlassian.migration.jira</groupId>
-            <artifactId>pbp-commons</artifactId>
-            <version>1.0.71</version>
-        </dependency>
+
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-test</artifactId>
@@ -173,6 +157,7 @@
 		<testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
 		<defaultGoal>install</defaultGoal>
 		<plugins>
+            <!-- Jacoco for code coverage -->
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
@@ -193,10 +178,13 @@
 				</executions>
 			</plugin>
 
+            <!-- To create an uber jar -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+
+            <!-- Kotlin plugin for compilation -->
 			<plugin>
 				<groupId>org.jetbrains.kotlin</groupId>
 				<artifactId>kotlin-maven-plugin</artifactId>
@@ -246,6 +234,8 @@
 					</dependency>
 				</dependencies>
 			</plugin>
+
+            <!-- ktlint for linting -->
 			<plugin>
 				<groupId>com.github.gantsign.maven</groupId>
 				<artifactId>ktlint-maven-plugin</artifactId>
@@ -254,6 +244,8 @@
 					<sourceRoots>${project.basedir}/src</sourceRoots>
 				</configuration>
 			</plugin>
+
+            <!-- detekt for static code analysis -->
 			<plugin>
 				<groupId>com.github.ozsie</groupId>
 				<artifactId>detekt-maven-plugin</artifactId>
@@ -268,7 +260,6 @@
 					</execution>
 				</executions>
 			</plugin>
-
 		</plugins>
 	</build>
 

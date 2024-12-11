@@ -28,6 +28,7 @@ class URLSanitisationService(
         serverBaseUrl: String,
         pathParams: List<String>,
     ): List<String> {
+        logger.info { "Sanitising URL path params: $pathParams for $serverBaseUrl" }
         if (pathParams.none { isIntegerID(it) }) {
             logger.info { "URL path params do not contain any integer ID, skipping sanitisation" }
             return pathParams
@@ -64,6 +65,7 @@ class URLSanitisationService(
                 }
             }
 
+        logger.info("Sanitised URL path params: $sanitisedPathParams $serverBaseUrl")
         return sanitisedPathParams
     }
 
@@ -71,6 +73,7 @@ class URLSanitisationService(
         serverBaseUrl: String,
         queryParams: List<Pair<String, String>>,
     ): List<Pair<String, String>> {
+        logger.info { "Sanitising URL query params: $queryParams for $serverBaseUrl" }
         val sanitisedQueryParams =
             queryParams.map { (key, value) ->
                 if (isJQLQueryField(key)) {
@@ -99,6 +102,7 @@ class URLSanitisationService(
                 return@map key to cloudValue
             }
 
+        logger.info { "Sanitised URL query params: $sanitisedQueryParams for $serverBaseUrl" }
         return sanitisedQueryParams
     }
 

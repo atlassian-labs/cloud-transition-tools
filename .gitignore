@@ -7,7 +7,7 @@
 node_modules/
 dist/
 
-# quality
+# code quality
 .scannerwork/
 
 # Database
@@ -22,12 +22,8 @@ data/*.db
 # Log files
 *.log
 
-# Package files
-# *.jar
-
 # Maven
 target/
-dist/
 
 # Application config file
 application.properties

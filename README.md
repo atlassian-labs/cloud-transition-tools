@@ -28,12 +28,20 @@ Use `Java 17` and `Maven 3.9.9` or later for development. More details in the Do
 
 #### Build Process
 Run following maven commands to build and run the application.
+
+1. Install all required libraries
+
+```
+(cd libs && mvn clean install)
+```
+2. Install and run CTT application
+
 ```
 mvn clean install -DskipTests
 mvn spring-boot:run
 ```
 
-#### Docker Setup
+#### Create Docker image
 Run following commands to build and run the docker image.
 ```
 docker build -t ctt .
@@ -51,9 +59,9 @@ Once the application has been built, you can access the API endpoints relative t
 
 ## Tests
 All the unit tests can be run using below commands
+
 * To run all tests `mvn test`
 * To run specific tests `mvn test -Dtest=ClassName1,ClassName2`
-
 
 ## Contributions
 Contributions to Cloud Transition Tools are welcome, in fact we are looking forward to it as multiple app/ vendor integrations can only

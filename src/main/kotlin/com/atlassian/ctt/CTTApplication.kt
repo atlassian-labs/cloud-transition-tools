@@ -10,7 +10,7 @@ import org.springframework.data.jdbc.repository.config.EnableJdbcRepositories
     info =
         Info(
             title = "Cloud Transition Tools API",
-            version = "1.0",
+            version = "0.0.1-SNAPSHOT",
             description = "API for Cloud Transition Tools",
         ),
 )
