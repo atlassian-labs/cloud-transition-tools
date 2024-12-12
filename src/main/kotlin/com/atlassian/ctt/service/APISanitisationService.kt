@@ -8,6 +8,9 @@ import com.fasterxml.jackson.core.JsonParseException
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
 
+/* API Sanitisation Service
+    * Sanitises API requests by translating server IDs to cloud IDs and sanitising JQL queries
+ */
 @Service
 class APISanitisationService(
     private val ctt: CTTService,

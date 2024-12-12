@@ -28,6 +28,10 @@ import org.springframework.web.server.ResponseStatusException
     name = "Cloud Transition Tools Service",
     description = "Service for translating server IDs to cloud IDs and vice versa",
 )
+/*
+    * CTT Service Controller
+    * Controller for the CTT service
+ */
 class CTTServiceController(
     private val ctt: CTTService,
     private val config: CTTServiceConfig,

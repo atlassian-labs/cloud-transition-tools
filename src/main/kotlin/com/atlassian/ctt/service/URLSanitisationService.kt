@@ -9,9 +9,9 @@ import org.springframework.stereotype.Service
 import java.net.URISyntaxException
 
 /*
-URL Sanitisation Service.
-Sanitises Server URL to Cloud URL by identifying and translating all integer IDs to cloud IDs using CTTService
- */
+* URL Sanitisation Service.
+    * Sanitises Server URL to Cloud URL by identifying and translating all integer IDs to cloud IDs using CTTService
+*/
 @Service
 class URLSanitisationService(
     private val ctt: CTTService,

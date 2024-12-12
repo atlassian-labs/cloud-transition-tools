@@ -1,5 +1,8 @@
 package com.atlassian.ctt.data
-
+/*
+ * ARI enum class
+ * List of all the ARI types supported by the cloud transition tools
+ */
 enum class ARI(
     val value: String,
 ) {

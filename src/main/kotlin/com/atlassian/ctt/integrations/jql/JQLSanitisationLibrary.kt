@@ -16,7 +16,11 @@ import io.atlassian.migration.sanitisation.stub.StubUserHandlerMigrationService
 typealias IdentifierSet = io.atlassian.migration.sanitisation.sanitiser.model.IdentifierSet
 typealias IdentifierType = io.atlassian.migration.sanitisation.sanitiser.model.IdentifierType
 typealias ParseCancellationException = org.antlr.v4.runtime.misc.ParseCancellationException
-
+/*
+    * JQL Sanitisation Library.
+    * Provides a sanitisation service for JQL queries.
+    * This wraps the underlying sanitisation library and provides a single point of access for sanitisation.
+ */
 class JQLSanitisationLibrary {
     val sanitiser: Sanitisation
         get() =

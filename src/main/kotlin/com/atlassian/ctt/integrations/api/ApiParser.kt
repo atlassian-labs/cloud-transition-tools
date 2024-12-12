@@ -10,8 +10,8 @@ data class APIParts(
 )
 
 /* API Parser interface
-* Parser given API(url, body) into APIParts. Also gives interface methods for serialising and sanitising keys
-* Concrete implementations can be provided for different API versions, for example JiraV2APIParser
+    * Parser given API(url, body) into APIParts. Also gives interface methods for serialising and sanitising keys
+    * Concrete implementations can be provided for different API versions, for example JiraV2APIParser
  */
 interface APIParser {
     // Parse the given API into APIParts

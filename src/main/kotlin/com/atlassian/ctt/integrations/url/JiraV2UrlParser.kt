@@ -6,11 +6,9 @@ import java.net.URL
 import java.net.URLDecoder
 
 /*
-* URL Parser implementation for Version 2 of Jira Server/Data Center API
-* Note that the entity(path param) is always followed by its value which is the case in Version 2.0 of Jira DC API.
-* Refer: https://developer.atlassian.com/server/jira/platform/rest/v10000/
-* urls for Jira's REST API resource have the following structure:
-* http://host:port/context/rest/api-name/api-version/resource-name/resource-value
+    * URL Parser implementation for Version 2 of Jira Server/Data Center APIs
+    * Refer: https://developer.atlassian.com/server/jira/platform/rest/v10000/
+    * Note that the entity(path param) is always followed by its value which is the case in Version 2.0 of Jira DC API.
 */
 
 // Major version that we support.

@@ -120,6 +120,7 @@ class JCMAMigrationMappingLoader(
     ) {
         logger.info { "Parsing ID mappings from CSV stream" }
 
+        var mappings = 0
         stream.bufferedReader().use {
             // Validate header
             val header = it.readLine().split(",")
@@ -132,6 +133,7 @@ class JCMAMigrationMappingLoader(
             // Parse mapping content
             it.forEachLine { line ->
                 try {
+                    mappings++
                     val values = line.split(",")
                     val (entityType, serverId, cloudId) = values
                     val idMapping =
@@ -142,7 +144,7 @@ class JCMAMigrationMappingLoader(
                 }
             }
         }
-        logger.info { "ID mappings stored in data store" }
+        logger.info { "ID mappings stored in data store. Number of entries $mappings" }
         setLoaderStatus(LoaderStatus(LoaderStatusCode.LOADED, "ID mappings downloaded"))
     }
 }
