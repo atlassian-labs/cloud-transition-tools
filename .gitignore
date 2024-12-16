@@ -7,6 +7,12 @@
 node_modules/
 dist/
 
+# code quality
+.scannerwork/
+
+# Database
+data/*.db
+
 # Compiled Java class files
 *.class
 
@@ -16,12 +22,11 @@ dist/
 # Log files
 *.log
 
-# Package files
-*.jar
-
 # Maven
 target/
-dist/
+
+# Application config file
+application.properties
 
 # JetBrains IDE
 .idea/

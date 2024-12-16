@@ -1,0 +1,23 @@
+# Application name
+spring.application.name=cloud-transition-tools
+server.servlet.context-path=/ctt
+
+# Cloud URL - Ensure no trailing slashes
+ctt.cloudURL = <CLOUD_URL>
+
+# Data loader types.
+# Values: [jcma]
+ctt.data.loader = jcma
+
+# Data store types.
+# Values: [memory, persistent]
+ctt.data.store = memory
+
+# Database access
+# Demonstrated using H2 but can use any database with jdbc driver
+spring.datasource.driver-class-name=org.h2.Driver
+spring.datasource.url=jdbc:h2:file:./data/ctt
+spring.datasource.username=<USERNAME>
+spring.datasource.password=<PASSWORD>
+spring.sql.init.schema-locations=classpath:mapping.sql
+spring.sql.init.mode=always
