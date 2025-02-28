@@ -6,9 +6,10 @@ import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotlin.jvm.Throws
+
 /*
-    * Jira V2 API Parser
-    * As per: https://developer.atlassian.com/cloud/jira/platform/rest/v2/
+ * Jira V2 API Parser
+ * As per: https://developer.atlassian.com/cloud/jira/platform/rest/v2/
  */
 class JiraV2ApiParser(
     private val urlParser: URLParser = JiraV2URLParser(),

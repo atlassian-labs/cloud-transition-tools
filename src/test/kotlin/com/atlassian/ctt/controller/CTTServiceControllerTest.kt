@@ -7,6 +7,7 @@ import com.atlassian.ctt.data.loader.MigrationMappingLoader
 import com.atlassian.ctt.data.store.MigrationMapping
 import com.atlassian.ctt.data.store.persistent.MigrationMappingRepository
 import com.atlassian.ctt.service.APISanitisationService
+import com.atlassian.ctt.service.AnalyticsEventService
 import com.atlassian.ctt.service.CTTService
 import com.atlassian.ctt.service.JQLSanitisationService
 import com.atlassian.ctt.service.URLSanitisationService
@@ -49,6 +50,9 @@ class CTTServiceControllerTest {
 
     @MockkBean
     private lateinit var jqlSanitisationService: JQLSanitisationService
+
+    @MockkBean
+    private lateinit var analyticsEventService: AnalyticsEventService
 
     private val serverURL = "serverURL"
     private val entityType = "jira:issue"
@@ -127,6 +131,10 @@ class CTTServiceControllerTest {
     fun `translate server ID to cloud ID`() {
         val migrationMapping = MigrationMapping(serverURL, entityType, serverId, cloudId)
         every { cttService.translateServerIdToCloudId(serverURL, entityType, serverId) } returns migrationMapping
+        every { cttConfig.sendAnalytics } returns true
+        every {
+            analyticsEventService.sendAnalyticsEvent(any(), any(), any())
+        } returns Unit
 
         mockMvc
             .perform(
@@ -147,7 +155,10 @@ class CTTServiceControllerTest {
             HttpServerErrorException(
                 HttpStatus.ACCEPTED,
             )
-
+        every { cttConfig.sendAnalytics } returns true
+        every {
+            analyticsEventService.sendAnalyticsEvent(any(), any(), any())
+        } returns Unit
         mockMvc
             .perform(
                 get("/rest/v1/server-to-cloud")
@@ -161,7 +172,10 @@ class CTTServiceControllerTest {
     fun `translate server ID to cloud ID, Failure Case Exception`() {
         every { cttService.translateServerIdToCloudId(serverURL, entityType, serverId) } throws
             HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)
-
+        every { cttConfig.sendAnalytics } returns true
+        every {
+            analyticsEventService.sendAnalyticsEvent(any(), any(), any())
+        } returns Unit
         mockMvc
             .perform(
                 get("/rest/v1/server-to-cloud")
@@ -175,7 +189,7 @@ class CTTServiceControllerTest {
     fun `translate cloud ID to server ID`() {
         val migrationMapping = MigrationMapping(serverURL, entityType, serverId, cloudId)
         every { cttService.translateCloudIdToServerId(serverURL, entityType, cloudId) } returns migrationMapping
-
+        every { cttConfig.sendAnalytics } returns false
         mockMvc
             .perform(
                 get("/rest/v1/cloud-to-server")
@@ -195,7 +209,10 @@ class CTTServiceControllerTest {
             HttpServerErrorException(
                 HttpStatus.ACCEPTED,
             )
-
+        every { cttConfig.sendAnalytics } returns true
+        every {
+            analyticsEventService.sendAnalyticsEvent(any(), any(), any())
+        } returns Unit
         mockMvc
             .perform(
                 get("/rest/v1/cloud-to-server")
@@ -209,7 +226,10 @@ class CTTServiceControllerTest {
     fun `translate cloud ID to server ID, Failure Case Exception`() {
         every { cttService.translateCloudIdToServerId(serverURL, entityType, cloudId) } throws
             HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)
-
+        every { cttConfig.sendAnalytics } returns true
+        every {
+            analyticsEventService.sendAnalyticsEvent(any(), any(), any())
+        } returns Unit
         mockMvc
             .perform(
                 get("/rest/v1/cloud-to-server")
@@ -323,7 +343,10 @@ class CTTServiceControllerTest {
         val jql = "project = 10000"
         val sanitisedJql = "project = 20000"
         every { jqlSanitisationService.sanitiseJQL(serverURL, jql) } returns sanitisedJql
-
+        every {
+            analyticsEventService.sendAnalyticsEvent(any(), any(), any())
+        } returns Unit
+        every { cttConfig.sendAnalytics } returns true
         mockMvc
             .perform(
                 get("/rest/v1/jql-sanitise")
@@ -339,7 +362,10 @@ class CTTServiceControllerTest {
         val jql = "project = 10000"
         every { jqlSanitisationService.sanitiseJQL(serverURL, jql) } throws
             HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)
-
+        every {
+            analyticsEventService.sendAnalyticsEvent(any(), any(), any())
+        } returns Unit
+        every { cttConfig.sendAnalytics } returns true
         mockMvc
             .perform(
                 get("/rest/v1/jql-sanitise")

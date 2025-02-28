@@ -13,6 +13,7 @@ import com.atlassian.ctt.integrations.jql.JQLSanitisationLibrary
 import com.atlassian.ctt.integrations.url.JiraV2URLParser
 import com.atlassian.ctt.integrations.url.URLParser
 import jakarta.annotation.PostConstruct
+import mu.KotlinLogging
 import org.springframework.beans.factory.BeanCreationException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -21,6 +22,8 @@ import java.io.File
 
 @Configuration
 class CTTServiceConfig {
+    private val logger = KotlinLogging.logger(this::class.java.name)
+
     @Value("\${ctt.cloudURL:#{null}}")
     internal var cloudURL: String? = null
 
@@ -29,6 +32,11 @@ class CTTServiceConfig {
 
     @Value("\${ctt.data.loader:jcma}")
     internal lateinit var dataLoaderType: String
+
+    @Value("\${ctt.sendAnalytics}")
+    internal val sendAnalytics: Boolean = true
+
+    internal var serverAuth: MutableMap<String, String> = mutableMapOf()
 
     @PostConstruct
     fun checkPropertiesFile() {
@@ -63,7 +71,12 @@ class CTTServiceConfig {
     ): MigrationMappingLoader {
         val migrationScope = MigrationScope(cloudURL!!, serverURL)
         return when (dataLoaderType) {
-            "jcma" -> JCMAMigrationMappingLoader(migrationScope, authHeader)
+            "jcma" -> {
+                if (sendAnalytics) {
+                    serverAuth[serverURL] = authHeader
+                }
+                JCMAMigrationMappingLoader(migrationScope, authHeader)
+            }
             else -> throw IllegalArgumentException("Unsupported data loader type: $dataLoaderType")
         }
     }

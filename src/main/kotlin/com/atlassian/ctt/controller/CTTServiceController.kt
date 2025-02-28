@@ -4,12 +4,12 @@ import com.atlassian.ctt.config.CTTServiceConfig
 import com.atlassian.ctt.data.loader.LoaderStatus
 import com.atlassian.ctt.data.loader.LoaderStatusCode
 import com.atlassian.ctt.service.APISanitisationService
+import com.atlassian.ctt.service.AnalyticsEventService
 import com.atlassian.ctt.service.CTTService
 import com.atlassian.ctt.service.JQLSanitisationService
 import com.atlassian.ctt.service.URLSanitisationService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
-import mu.KotlinLogging
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -22,25 +22,24 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.client.HttpServerErrorException
 import org.springframework.web.server.ResponseStatusException
 
+/*
+ * CTT Service Controller
+ * Controller for the CTT service
+ */
 @RestController
 @RequestMapping("/rest/v1")
 @Tag(
     name = "Cloud Transition Tools Service",
     description = "Service for translating server IDs to cloud IDs and vice versa",
 )
-/*
-    * CTT Service Controller
-    * Controller for the CTT service
- */
 class CTTServiceController(
     private val ctt: CTTService,
     private val config: CTTServiceConfig,
     private val urlSanitsationService: URLSanitisationService,
     private val apiSanitisationService: APISanitisationService,
     private val jqlSanitisationService: JQLSanitisationService,
+    private val analyticsEventService: AnalyticsEventService,
 ) {
-    private val logger = KotlinLogging.logger(this::class.java.name)
-
     @GetMapping("/health")
     @Operation(summary = "Health check", description = "Check if the service is up and running")
     fun health(): ResponseEntity<String> = ResponseEntity.ok("OK")
@@ -75,13 +74,28 @@ class CTTServiceController(
         @RequestParam serverBaseURL: String,
         @RequestParam entityType: String,
         @RequestParam serverId: Long,
-    ): ResponseEntity<out Any> =
-        try {
+    ): ResponseEntity<out Any> {
+        val attributes = mutableMapOf<String, Boolean>()
+        return try {
             val mapping = ctt.translateServerIdToCloudId(serverBaseURL, entityType, serverId)
+            attributes.apply {
+                put("entityTranslated", (mapping.cloudId != 0L))
+                put("success", true)
+            }
             ResponseEntity.ok(mapping)
         } catch (e: HttpServerErrorException) {
+            attributes.apply {
+                put("entityTranslated", false)
+                put("success", false)
+            }
+
             ResponseEntity(e.message, e.statusCode)
+        } finally {
+            if (config.sendAnalytics) {
+                analyticsEventService.sendAnalyticsEvent(serverBaseURL, "translateServerToCloudId", attributes)
+            }
         }
+    }
 
     @GetMapping("/cloud-to-server")
     @Operation(summary = "Translate cloud ID to server ID", description = "Translate a cloud ID to a server ID")
@@ -89,13 +103,27 @@ class CTTServiceController(
         @RequestParam serverBaseURL: String,
         @RequestParam entityType: String,
         @RequestParam cloudId: Long,
-    ): ResponseEntity<out Any> =
-        try {
+    ): ResponseEntity<out Any> {
+        val attributes = mutableMapOf<String, Boolean>()
+        return try {
             val mapping = ctt.translateCloudIdToServerId(serverBaseURL, entityType, cloudId)
+            attributes.apply {
+                put("entityTranslated", (mapping.serverId != 0L))
+                put("success", true)
+            }
             ResponseEntity.ok(mapping)
         } catch (e: HttpServerErrorException) {
+            attributes.apply {
+                put("entityTranslated", false)
+                put("success", false)
+            }
             ResponseEntity(e.message, e.statusCode)
+        } finally {
+            if (config.sendAnalytics) {
+                analyticsEventService.sendAnalyticsEvent(serverBaseURL, "translateCloudToServerId", attributes)
+            }
         }
+    }
 
     @GetMapping("/url-sanitise")
     @Operation(summary = "Sanitise URL", description = "Sanitise a URL")
@@ -128,11 +156,28 @@ class CTTServiceController(
         @RequestParam serverBaseURL: String,
         @RequestBody jql: String,
     ): ResponseEntity<out Any> {
-        try {
+        val attributes = mutableMapOf<String, Boolean>()
+        return try {
             val sanitisedJQL = jqlSanitisationService.sanitiseJQL(serverBaseURL, jql)
-            return ResponseEntity.ok(sanitisedJQL)
+            attributes.apply {
+                put("jqlTranslated", (jql == sanitisedJQL))
+                put("success", true)
+            }
+            ResponseEntity.ok(sanitisedJQL)
         } catch (e: HttpServerErrorException) {
-            return ResponseEntity(e.message, e.statusCode)
+            attributes.apply {
+                put("jqlTranslated", false)
+                put("success", false)
+            }
+            ResponseEntity(e.message, e.statusCode)
+        } finally {
+            if (config.sendAnalytics) {
+                analyticsEventService.sendAnalyticsEvent(
+                    serverBaseURL,
+                    "translateJQL",
+                    attributes,
+                )
+            }
         }
     }
 }

@@ -10,7 +10,7 @@ import java.net.URISyntaxException
 
 /*
 * URL Sanitisation Service.
-    * Sanitises Server URL to Cloud URL by identifying and translating all integer IDs to cloud IDs using CTTService
+ * Sanitises Server URL to Cloud URL by identifying and translating all integer IDs to cloud IDs using CTTService
 */
 @Service
 class URLSanitisationService(
