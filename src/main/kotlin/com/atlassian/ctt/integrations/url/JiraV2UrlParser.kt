@@ -6,9 +6,9 @@ import java.net.URL
 import java.net.URLDecoder
 
 /*
-    * URL Parser implementation for Version 2 of Jira Server/Data Center APIs
-    * Refer: https://developer.atlassian.com/server/jira/platform/rest/v10000/
-    * Note that the entity(path param) is always followed by its value which is the case in Version 2.0 of Jira DC API.
+ * URL Parser implementation for Version 2 of Jira Server/Data Center APIs
+ * Refer: https://developer.atlassian.com/server/jira/platform/rest/v10000/
+ * Note that the entity(path param) is always followed by its value which is the case in Version 2.0 of Jira DC API.
 */
 
 // Major version that we support.

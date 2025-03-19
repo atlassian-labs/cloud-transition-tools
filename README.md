@@ -25,6 +25,7 @@ Use `Java 17` and `Maven 3.9.9` or later for development. More details in the Do
    [application.properties.template](src/main/resources/application.properties.template) for a reference.
 2. Make sure to set `cloudURL` in  application.properties file along with optional values for data store and loader.
 3. If you are using persistent storage, make sure to add the database details.
+4. Note: We collect API usage analytics. If you do not want to send events, please set `sendAnalytics` to false
 
 #### Build Process
 Run following maven commands to build and run the application.

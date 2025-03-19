@@ -120,13 +120,12 @@ class CTTService(
         val loadStatus = getLoaderStatus(serverURL)
         throwOnLoaderStatus(loadStatus, serverURL)
 
-        val cloudID =
+        val cloudId =
             dataStore.getCloudId(serverURL, entityType, serverId) ?: run {
                 logger.warn { "Cloud ID not found for $serverURL, $entityType, $serverId" }
                 0
             }
-
-        return MigrationMapping(serverURL, entityType, serverId, cloudID)
+        return MigrationMapping(serverURL, entityType, serverId, cloudId)
     }
 
     @Throws(HttpServerErrorException::class)

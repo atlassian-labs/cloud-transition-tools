@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.atlassian.transition.ctt</groupId>
 	<artifactId>cloud-transition-tools</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.2-SNAPSHOT</version>
 	<name>cloud-transition-tools</name>
 	<description>cloud-transition-tools</description>
 	<url/>

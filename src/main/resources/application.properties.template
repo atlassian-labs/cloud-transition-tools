@@ -13,6 +13,9 @@ ctt.data.loader = jcma
 # Values: [memory, persistent]
 ctt.data.store = memory
 
+# send Analytics - This determines to send analytics of this application usage to Atlassian
+ctt.sendAnalytics = true
+
 # Database access
 # Demonstrated using H2 but can use any database with jdbc driver
 spring.datasource.driver-class-name=org.h2.Driver
